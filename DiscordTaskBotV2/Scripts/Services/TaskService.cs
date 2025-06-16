@@ -75,12 +75,12 @@ namespace DiscordTaskBot.Services
             await _lock.WaitAsync();
             try
             {
-                if (!tasks.ContainsKey(taskID))
+                if (!tasks.TryGetValue(taskID, out TaskData? value))
                     return;
 
-                if (tasks[taskID].State < Enum.GetValues<TaskStates>().Max())
+                if (value.State < Enum.GetValues<TaskStates>().Max())
                 {
-                    tasks[taskID].State += 1;
+                    value.State += 1;
                     await SaveTasks();
                 }
             }
@@ -126,10 +126,38 @@ namespace DiscordTaskBot.Services
                 {
                     task.ChannelID = newChannelID;
                     task.MessageID = newMessageID;
-                    await SaveTasks();
+                    await MoveTaskToArchive(taskID);
                 }
             }
             finally { _lock.Release(); }
+        }
+
+        private async Task MoveTaskToArchive(string taskID)
+        {
+            if (!tasks.ContainsKey(taskID)) return;
+
+            Dictionary<string, TaskData> archivedTasks = new();
+
+            string json;
+
+            if (File.Exists(ArchiveFilePath))
+            {
+                json = await File.ReadAllTextAsync(ArchiveFilePath);
+                archivedTasks = JsonSerializer.Deserialize<Dictionary<string, TaskData>>(json) ?? new();
+            }
+
+            archivedTasks.Add(taskID, tasks[taskID]);
+
+            json = JsonSerializer.Serialize(archivedTasks, new JsonSerializerOptions
+            {
+                WriteIndented = true
+            });
+
+            await File.WriteAllTextAsync(ArchiveFilePath, json);
+
+            tasks.Remove(taskID);
+
+            await SaveTasks();
         }
     }
 }

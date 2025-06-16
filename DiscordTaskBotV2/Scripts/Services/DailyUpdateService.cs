@@ -27,6 +27,8 @@ namespace DiscordTaskBot.Services
                     var message = await _discordService.GetMessageAsync(task.Value.MessageID, task.Value.ChannelID);
                     if (message != null)
                         await _discordService.UpdateMessageAsync(embed, components, message);
+                    else
+                        await _taskService.RemoveTask(task.Key);
                 }
 
                 Console.WriteLine("Tasks updated!");

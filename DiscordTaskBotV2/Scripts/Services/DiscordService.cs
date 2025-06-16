@@ -43,7 +43,10 @@ namespace DiscordTaskBot.Services
 
             var archiveChannel = _client.GetChannel(archiveChannelID) as IMessageChannel;
 
-            var newMessage = await archiveChannel!.SendMessageAsync(embed: embed, components: components);
+            if (archiveChannel == null)
+                return null;
+
+            var newMessage = await archiveChannel.SendMessageAsync(embed: embed, components: components);
             return newMessage;
         }
 
