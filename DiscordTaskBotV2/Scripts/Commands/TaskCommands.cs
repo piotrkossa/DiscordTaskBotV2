@@ -10,7 +10,7 @@ namespace DiscordTaskBot.Commands
         private readonly TaskService _taskService;
 
         // Konstruktor z wstrzykiwaniem TaskService
-        public TaskCommands(TaskService taskService, DiscordService discordService)
+        public TaskCommands(TaskService taskService)
         {
             _taskService = taskService;
         }

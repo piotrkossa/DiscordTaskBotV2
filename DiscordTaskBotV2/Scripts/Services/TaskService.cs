@@ -116,5 +116,20 @@ namespace DiscordTaskBot.Services
                 _lock.Release();
             }
         }
+
+        public async Task UpdateTaskLocationAsync(string taskID, ulong newChannelID, ulong newMessageID)
+        {
+            await _lock.WaitAsync();
+            try
+            {
+                if (tasks.TryGetValue(taskID, out var task))
+                {
+                    task.ChannelID = newChannelID;
+                    task.MessageID = newMessageID;
+                    await SaveTasks();
+                }
+            }
+            finally { _lock.Release(); }
+        }
     }
 }

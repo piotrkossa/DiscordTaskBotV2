@@ -32,7 +32,5 @@ namespace DiscordTaskBot.Services
                 Console.WriteLine("Tasks updated!");
             }
         }
-
-        private 
     }
 }

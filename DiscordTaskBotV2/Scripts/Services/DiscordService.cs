@@ -53,7 +53,7 @@ namespace DiscordTaskBot.Services
             if (channel == null)
                 return null;
 
-            var message = channel.GetMessageAsync(messageID) as IUserMessage;
+            var message = await channel.GetMessageAsync(messageID) as IUserMessage;
             return message;
         }
     }

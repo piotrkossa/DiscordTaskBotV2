@@ -74,6 +74,15 @@ namespace DiscordTaskBot.Services
                         (var embed, var components) = BuilderService.BuildMessage(taskData!, taskID);
 
                         await _discordService.UpdateMessageAsync(embed, components, message);
+                        var movedMessage = await _discordService.MoveMessageAsync(component);
+
+                        if (movedMessage == null)
+                        {
+                            await component.FollowupAsync("Failed to move task to archive.", ephemeral: true);
+                            return;
+                        }
+                        
+                        await _taskService.UpdateTaskLocationAsync(taskID, movedMessage.Channel.Id, movedMessage.Id);
 
                         await component.FollowupAsync("Task moved to archive,", ephemeral: true);
                     }
