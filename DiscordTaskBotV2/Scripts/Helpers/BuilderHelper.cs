@@ -1,9 +1,9 @@
 using Discord;
 using DiscordTaskBot.Models;
 
-namespace DiscordTaskBot.Services
+namespace DiscordTaskBot.Helpers
 {
-    public static class BuilderService
+    public static class BuilderHelper
     {
         public static string GetDiscordTimestamp(DateTime dateTime, char format = 'R')
         {

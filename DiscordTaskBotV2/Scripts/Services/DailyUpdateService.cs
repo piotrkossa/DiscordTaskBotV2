@@ -1,3 +1,5 @@
+using DiscordTaskBot.Helpers;
+
 namespace DiscordTaskBot.Services
 {
     public class DailyUpdateService
@@ -23,7 +25,7 @@ namespace DiscordTaskBot.Services
 
                 foreach (var task in await _taskService.GetAllTasksAsync())
                 {
-                    (var embed, var components) = BuilderService.BuildMessage(task.Value, task.Key);
+                    (var embed, var components) = BuilderHelper.BuildMessage(task.Value, task.Key);
                     var message = await _discordService.GetMessageAsync(task.Value.MessageID, task.Value.ChannelID);
                     if (message != null)
                         await _discordService.UpdateMessageAsync(embed, components, message);

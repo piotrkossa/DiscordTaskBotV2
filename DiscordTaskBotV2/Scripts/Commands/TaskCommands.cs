@@ -1,5 +1,6 @@
 using Discord;
 using Discord.Interactions;
+using DiscordTaskBot.Helpers;
 using DiscordTaskBot.Models;
 using DiscordTaskBot.Services;
 
@@ -29,7 +30,7 @@ namespace DiscordTaskBot.Commands
             var taskID = await _taskService.AddTask(taskData);
 
 
-            (var embed, var components) = BuilderService.BuildMessage(taskData, taskID);
+            (var embed, var components) = BuilderHelper.BuildMessage(taskData, taskID);
 
             await response.ModifyAsync(msg =>
             {

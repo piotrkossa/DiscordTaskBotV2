@@ -1,5 +1,6 @@
 using Discord;
 using Discord.WebSocket;
+using DiscordTaskBot.Helpers;
 using DiscordTaskBot.Models;
 
 namespace DiscordTaskBot.Services
@@ -57,7 +58,7 @@ namespace DiscordTaskBot.Services
                         }
                         await _taskService.IncreaseTaskState(taskID);
 
-                        (var embed, var components) = BuilderService.BuildMessage(taskData, taskID);
+                        (var embed, var components) = BuilderHelper.BuildMessage(taskData, taskID);
 
                         await _discordService.UpdateMessageAsync(embed, components, message);
                     }
@@ -71,7 +72,7 @@ namespace DiscordTaskBot.Services
                         await _taskService.IncreaseTaskState(taskID);
                         taskData = await _taskService.GetTaskByIDAsync(taskID);
 
-                        (var embed, var components) = BuilderService.BuildMessage(taskData!, taskID);
+                        (var embed, var components) = BuilderHelper.BuildMessage(taskData!, taskID);
 
                         await _discordService.UpdateMessageAsync(embed, components, message);
                         var movedMessage = await _discordService.MoveMessageAsync(component);
