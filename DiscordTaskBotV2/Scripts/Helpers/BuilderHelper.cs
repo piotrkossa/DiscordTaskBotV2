@@ -23,7 +23,7 @@ namespace DiscordTaskBot.Helpers
 
             var isLate = false;
 
-            if (remainingTime.TotalHours < 0)
+            if (remainingTime.TotalHours <= 0)
             {
                 titleEmoji = "💀 ";
                 embedColor = new Color(0, 0, 0);
