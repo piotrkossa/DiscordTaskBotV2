@@ -19,7 +19,7 @@ namespace DiscordTaskBot.Helpers
             Color embedColor = Color.Default;
             ButtonStyle buttonStyle = ButtonStyle.Secondary;
 
-            var remainingTime = taskData.CompletionDate - DateTime.UtcNow;
+            var remainingTime = taskData.CompletionDate - DateTime.Now;
 
             var isLate = false;
 
