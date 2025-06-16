@@ -21,6 +21,7 @@ namespace DiscordTaskBot.Commands
             [Summary("user", "User to whom the task will be assigned")] IUser user,
             [Summary("daysToDeadline", "Days allocated to complete the task")] int daysToDeadline)
         {
+            await DeferAsync();
             var response = await FollowupAsync("Creating Task...");
 
 
@@ -32,6 +33,7 @@ namespace DiscordTaskBot.Commands
 
             await response.ModifyAsync(msg =>
             {
+                msg.Content = null;
                 msg.Embed = embed;
                 msg.Components = components;
             });

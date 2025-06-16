@@ -1,5 +1,4 @@
-﻿using System;
-using Discord;
+﻿using Discord;
 using Discord.WebSocket;
 using DiscordTaskBot.Configuration;
 using DiscordTaskBot.Core;
@@ -15,7 +14,7 @@ public class Program
         var services = new ServiceCollection()
             .AddSingleton(new DiscordSocketClient(new DiscordSocketConfig
             {
-                GatewayIntents = GatewayIntents.AllUnprivileged | GatewayIntents.MessageContent
+                GatewayIntents = GatewayIntents.Guilds | GatewayIntents.GuildMessages | GatewayIntents.MessageContent
             }))
             .AddSingleton<Bot>()
             .AddSingleton<ButtonHandlerService>()

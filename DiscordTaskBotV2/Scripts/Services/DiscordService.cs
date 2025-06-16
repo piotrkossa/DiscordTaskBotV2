@@ -31,7 +31,7 @@ namespace DiscordTaskBot.Services
 
         public async Task<IUserMessage?> MoveMessageAsync(SocketMessageComponent messageComponent)
         {
-            if (await messageComponent.Channel.GetMessageAsync(messageComponent.Id) is not IUserMessage originalMessage)
+            if (await messageComponent.Channel.GetMessageAsync(messageComponent.Message.Id) is not IUserMessage originalMessage)
                 return null;
 
             var embed = originalMessage.Embeds.FirstOrDefault() as Embed;
