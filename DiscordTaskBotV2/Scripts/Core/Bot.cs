@@ -8,7 +8,7 @@ namespace DiscordTaskBot.Core
 {
     public class Bot
     {
-        public readonly DiscordSocketClient _client;
+        private readonly DiscordSocketClient _client;
 
         private readonly InteractionService _interactionService;
 

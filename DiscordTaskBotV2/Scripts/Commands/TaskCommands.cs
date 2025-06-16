@@ -9,11 +9,12 @@ namespace DiscordTaskBot.Commands
     public class TaskCommands : InteractionModuleBase<SocketInteractionContext>
     {
         private readonly TaskService _taskService;
+        private readonly ReminderService _reminderService;
 
-        // Konstruktor z wstrzykiwaniem TaskService
-        public TaskCommands(TaskService taskService)
+        public TaskCommands(TaskService taskService, ReminderService reminderService)
         {
             _taskService = taskService;
+            _reminderService = reminderService;
         }
 
         [SlashCommand("createtask", "Creates new task")]
@@ -24,7 +25,6 @@ namespace DiscordTaskBot.Commands
         {
             await DeferAsync();
             var response = await FollowupAsync("Creating Task...");
-
 
             var taskData = TaskData.FromDiscord(description, user, daysToDeadline, response);
             var taskID = await _taskService.AddTask(taskData);
@@ -38,6 +38,8 @@ namespace DiscordTaskBot.Commands
                 msg.Embed = embed;
                 msg.Components = components;
             });
+
+            await _reminderService.SendNewTaskInfo(taskData);
         }
     }
 }

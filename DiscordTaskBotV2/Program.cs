@@ -21,17 +21,13 @@ public class Program
             .AddSingleton<DailyUpdateService>()
             .AddSingleton<DiscordService>()
             .AddSingleton<TaskService>()
+            .AddSingleton<ReminderService>()
             .BuildServiceProvider();
 
 
         var bot = services.GetRequiredService<Bot>();
 
         await services.GetRequiredService<TaskService>().LoadTasksAsync();
-
-        var updateService = services.GetRequiredService<DailyUpdateService>();
-        _ = updateService.ScheduleDailyUpdateAsync();
-
-
 
         await bot.RunAsync();
     }
