@@ -14,13 +14,12 @@ namespace DiscordTaskBot.Core
 
         private readonly ButtonHandlerService _buttonHandlerService;
 
-        public Bot(ButtonHandlerService buttonHandlerService)
+        private readonly IServiceProvider _services;
+
+        public Bot(DiscordSocketClient discordSocketClient, ButtonHandlerService buttonHandlerService, IServiceProvider services)
         {
-            _client = new(
-                new DiscordSocketConfig
-                {
-                    GatewayIntents = GatewayIntents.AllUnprivileged
-                });
+            _services = services;
+            _client = discordSocketClient;
             _interactionService = new InteractionService(_client.Rest);
 
             _buttonHandlerService = buttonHandlerService;
@@ -49,7 +48,7 @@ namespace DiscordTaskBot.Core
         {
             Console.WriteLine("Bot connected.");
 
-            await _interactionService.AddModulesAsync(Assembly.GetExecutingAssembly(), null);
+            await _interactionService.AddModulesAsync(Assembly.GetExecutingAssembly(), _services);
 
             await _interactionService.RegisterCommandsToGuildAsync(ulong.Parse(Environment.GetEnvironmentVariable("GUILD")!), true);
 
@@ -59,7 +58,7 @@ namespace DiscordTaskBot.Core
         private async Task OnInteraction(SocketInteraction interaction)
         {
             var context = new SocketInteractionContext(_client, interaction);
-            await _interactionService.ExecuteCommandAsync(context, null);
+            await _interactionService.ExecuteCommandAsync(context, _services);
         }
 
         private Task LogAsync(LogMessage log)
