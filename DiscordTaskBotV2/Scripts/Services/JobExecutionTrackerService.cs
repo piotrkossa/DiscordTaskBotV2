@@ -38,11 +38,11 @@ public class JobExecutionTrackerService
         }
     }
 
-    public bool WasRunToday(string jobName)
+    public bool WasRunWithin(string jobName, TimeSpan timeSpan)
     {
         if (_lastRunTimes.TryGetValue(jobName, out var lastRun))
         {
-            return lastRun.Date == DateTime.Today;
+            return lastRun > DateTime.Now - timeSpan;
         }
         return false;
     }
@@ -62,7 +62,7 @@ public class JobExecutionTrackerService
         foreach (var jobKey in await _scheduler.GetJobKeys(GroupMatcher<JobKey>.AnyGroup()))
         {
             var jobName = jobKey.Name;
-            if (!WasRunToday(jobName))
+            if (!WasRunWithin(jobName, TimeSpan.FromHours(24)))
             {
                 Console.WriteLine($"Triggering job '{jobName}' via Quartz scheduler...");
                 await _scheduler.TriggerJob(jobKey);
