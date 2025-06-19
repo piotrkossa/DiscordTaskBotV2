@@ -159,5 +159,18 @@ namespace DiscordTaskBot.Services
 
             await SaveTasks();
         }
+
+        public async Task AddDaysToTask(string taskID, int days)
+        {
+            await _lock.WaitAsync();
+            try
+            {
+                if (tasks.ContainsKey(taskID))
+                {
+                    tasks[taskID].CompletionDate = tasks[taskID].CompletionDate.AddDays(days);
+                }
+            }
+            finally { _lock.Release(); }
+        }
     }
 }

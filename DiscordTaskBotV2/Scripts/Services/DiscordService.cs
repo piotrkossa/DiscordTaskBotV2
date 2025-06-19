@@ -1,6 +1,8 @@
 using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
+using DiscordTaskBot.Helpers;
+using DiscordTaskBot.Models;
 
 namespace DiscordTaskBot.Services
 {
@@ -27,6 +29,20 @@ namespace DiscordTaskBot.Services
                 msg.Embed = embed;
                 msg.Components = component;
             });
+        }
+
+        public async Task CreateAndUpdateMessageAsync(string taskID, TaskData taskData)
+        {
+            (var embed, var components) = BuilderHelper.BuildMessage(taskData, taskID);
+
+            var message = await GetMessageAsync(taskData.MessageID, taskData.ChannelID);
+
+            if (message == null)
+            {
+                return;
+            }
+
+            await UpdateMessageAsync(embed, components, message);
         }
 
         public async Task<IUserMessage?> MoveMessageAsync(SocketMessageComponent messageComponent)
