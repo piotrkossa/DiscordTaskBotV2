@@ -44,7 +44,7 @@ namespace DiscordTaskBot.Services
 
         }
 
-        private async Task SendMessage(ulong userID, string text)
+        public async Task SendMessage(ulong userID, string text)
         {
             var user = await _client.GetUserAsync(userID);
             if (user == null)

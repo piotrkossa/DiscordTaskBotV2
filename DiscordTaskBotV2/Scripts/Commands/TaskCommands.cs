@@ -53,6 +53,13 @@ namespace DiscordTaskBot.Commands
         {
             await DeferAsync(true);
 
+            var guildUser = Context.Guild.GetUser(Context.User.Id);
+            if (guildUser == null || !guildUser.GuildPermissions.Administrator)
+            {
+                await RespondAsync("❌ You must be an administrator to use this command.", ephemeral: true);
+                return;
+            }
+
             var menu = new SelectMenuBuilder()
                 .WithCustomId($"task_options:{days}")
                 .WithPlaceholder("Choose a task")
@@ -77,24 +84,33 @@ namespace DiscordTaskBot.Commands
         [ComponentInteraction("task_options:*")]
         public async Task HandleSelectMenu(string customID, string selected)
         {
-            await DeferAsync(true);
+            await DeferAsync(); // bez "true" – nie robimy ephemerala, tylko modyfikujemy istniejącą wiadomość
 
             int daysToAdd = int.Parse(customID);
             var taskID = selected;
 
-
             var taskData = await _taskService.GetTaskByIDAsync(taskID);
 
-            if (taskData == null) {
-                await FollowupAsync($"Task not found!", ephemeral: true);
+            if (taskData == null)
+            {
+                await ModifyOriginalResponseAsync(msg =>
+                {
+                    msg.Content = "❌ Task not found!";
+                    msg.Components = new ComponentBuilder().Build(); // usuń komponenty
+                });
                 return;
             }
 
             await _taskService.AddDaysToTask(taskID, daysToAdd);
-
             await _discordService.CreateAndUpdateMessageAsync(taskID, taskData);
 
-            await FollowupAsync($"Added {daysToAdd} days to choosen task", ephemeral: true);
+            await ModifyOriginalResponseAsync(msg =>
+            {
+                msg.Content = $"✅ Added {daysToAdd} day(s) to task `{taskID}`";
+                msg.Components = new ComponentBuilder().Build(); // usuń menu
+            });
+
+            await _reminderService.SendMessage(taskData.UserID, $"You have been assigned {daysToAdd} more day(s) to complete your task.");
         }
     }
 }
