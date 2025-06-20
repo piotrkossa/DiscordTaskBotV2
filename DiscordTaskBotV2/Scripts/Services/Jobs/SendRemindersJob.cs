@@ -22,7 +22,7 @@ namespace DiscordTaskBot.Services.Jobs
 
                 var daysLeft = (taskData.CompletionDate - DateTime.Now.Date).Days;
 
-                if (daysLeft <= 2)
+                if (daysLeft <= 2 && taskData.State < Models.TaskStates.COMPLETED)
                 {
                     await _reminderService.SendReminder(taskData);
                 }
