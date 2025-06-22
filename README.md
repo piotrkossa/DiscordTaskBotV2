@@ -50,6 +50,12 @@ dotnet run
 
 ## 📋 Example Task Message
 ![Alt text](https://i.imgur.com/5LUW1RO.png)
+![Alt text](https://i.imgur.com/ob8qWql.png)
+![Alt text](https://i.imgur.com/LEhZGrx.png)
+
+## 📋 Direct Message Reminders
+![Alt text](https://i.imgur.com/QpCIzhV.png)
+![Alt text](https://i.imgur.com/rtqVI6V.png)
 
 ## 📝 License
 Open source – feel free to use, modify, and contribute!
