@@ -1,5 +1,6 @@
 using System.Text.Json.Serialization;
 using Discord;
+using LiteDB;
 
 namespace DiscordTaskBot.Models
 {
@@ -13,6 +14,8 @@ namespace DiscordTaskBot.Models
 
     public class TaskData
     {
+        [BsonId]
+        public string ID { get; set; }
         public string Description { get; set; }
         public ulong UserID { get; set; }
 
@@ -28,10 +31,11 @@ namespace DiscordTaskBot.Models
         {
             return new TaskData(description, user.Id, DateTime.Today, DateTime.Today.AddDays(daysToDeadline + 1).AddSeconds(-1), TaskStates.NOT_STARTED, message.Channel.Id, message.Id);
         }
-        
+
         [JsonConstructor]
         public TaskData(string description, ulong userID, DateTime creationDate, DateTime completionDate, TaskStates state, ulong channelID, ulong messageID)
         {
+
             Description = description;
             UserID = userID;
             CreationDate = creationDate;
@@ -39,6 +43,7 @@ namespace DiscordTaskBot.Models
             State = state;
             ChannelID = channelID;
             MessageID = messageID;
+            ID = Guid.NewGuid().ToString();
         }
     }
 }

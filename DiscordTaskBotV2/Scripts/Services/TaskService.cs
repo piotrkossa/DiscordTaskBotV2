@@ -1,27 +1,32 @@
-using System.Text.Json;
+using LiteDB;
 using DiscordTaskBot.Models;
 
 namespace DiscordTaskBot.Services
 {
     public class TaskService
     {
-        private const string FilePath = "tasks.json";
-        private const string ArchiveFilePath = "tasksarchive.json";
-
-        private Dictionary<string, TaskData> tasks = new();
-
+        private readonly LiteDatabase _liteDatabase;
+        private readonly ILiteCollection<TaskData> _taskCollection;
         private readonly SemaphoreSlim _lock = new(1, 1);
 
+        public TaskService()
+        {
+            _liteDatabase = new LiteDatabase(@"tasks.db");
+            _taskCollection = _liteDatabase.GetCollection<TaskData>("tasks");
+            _taskCollection.EnsureIndex(x => x.ID);
+        }
+
         public async Task LoadTasksAsync()
+        {
+            await Task.CompletedTask;
+        }
+
+        private async Task SaveTaskAsync(TaskData task)
         {
             await _lock.WaitAsync();
             try
             {
-                if (!File.Exists(FilePath))
-                    return;
-
-                var json = await File.ReadAllTextAsync(FilePath);
-                tasks = JsonSerializer.Deserialize<Dictionary<string, TaskData>>(json) ?? new();
+                _taskCollection.Upsert(task);
             }
             finally
             {
@@ -29,27 +34,13 @@ namespace DiscordTaskBot.Services
             }
         }
 
-        private async Task SaveTasks()
-        {
-            string json = JsonSerializer.Serialize(tasks, new JsonSerializerOptions
-            {
-                WriteIndented = true
-            });
-
-            await File.WriteAllTextAsync(FilePath, json);
-        }
-
         public async Task<string> AddTask(TaskData task)
         {
             await _lock.WaitAsync();
             try
             {
-                var id = Guid.NewGuid().ToString();
-
-                tasks.Add(id, task);
-                await SaveTasks();
-
-                return id;
+                _taskCollection.Upsert(task);
+                return task.ID;
             }
             finally
             {
@@ -62,7 +53,7 @@ namespace DiscordTaskBot.Services
             await _lock.WaitAsync();
             try
             {
-                if (tasks.Remove(taskID)) await SaveTasks();
+                _taskCollection.Delete(taskID);
             }
             finally
             {
@@ -75,13 +66,14 @@ namespace DiscordTaskBot.Services
             await _lock.WaitAsync();
             try
             {
-                if (!tasks.TryGetValue(taskID, out TaskData? value))
-                    return;
+                var task = _taskCollection.FindById(taskID);
+                if (task == null) return;
 
-                if (value.State < Enum.GetValues<TaskStates>().Max())
+                var maxState = Enum.GetValues<TaskStates>().Max();
+                if (task.State < maxState)
                 {
-                    value.State += 1;
-                    await SaveTasks();
+                    task.State += 1;
+                    _taskCollection.Update(task);
                 }
             }
             finally
@@ -95,7 +87,8 @@ namespace DiscordTaskBot.Services
             await _lock.WaitAsync();
             try
             {
-                return new Dictionary<string, TaskData>(tasks); // kopia, żeby nie wyciekał stan wewnętrzny
+                var tasks = _taskCollection.FindAll().ToDictionary(t => t.ID, t => t);
+                return tasks;
             }
             finally
             {
@@ -108,8 +101,7 @@ namespace DiscordTaskBot.Services
             await _lock.WaitAsync();
             try
             {
-                tasks.TryGetValue(taskID, out var result);
-                return result;
+                return _taskCollection.FindById(taskID);
             }
             finally
             {
@@ -122,42 +114,39 @@ namespace DiscordTaskBot.Services
             await _lock.WaitAsync();
             try
             {
-                if (tasks.TryGetValue(taskID, out var task))
+                var task = _taskCollection.FindById(taskID);
+                if (task != null)
                 {
                     task.ChannelID = newChannelID;
                     task.MessageID = newMessageID;
+                    _taskCollection.Update(task);
+
                     await MoveTaskToArchive(taskID);
                 }
             }
-            finally { _lock.Release(); }
+            finally
+            {
+                _lock.Release();
+            }
         }
 
         private async Task MoveTaskToArchive(string taskID)
         {
-            if (!tasks.ContainsKey(taskID)) return;
-
-            Dictionary<string, TaskData> archivedTasks = new();
-
-            string json;
-
-            if (File.Exists(ArchiveFilePath))
+            await _lock.WaitAsync();
+            try
             {
-                json = await File.ReadAllTextAsync(ArchiveFilePath);
-                archivedTasks = JsonSerializer.Deserialize<Dictionary<string, TaskData>>(json) ?? new();
+                var task = _taskCollection.FindById(taskID);
+                if (task == null) return;
+
+                var archiveCollection = _liteDatabase.GetCollection<TaskData>("tasks_archive");
+
+                archiveCollection.Upsert(task);
+                _taskCollection.Delete(taskID);
             }
-
-            archivedTasks.Add(taskID, tasks[taskID]);
-
-            json = JsonSerializer.Serialize(archivedTasks, new JsonSerializerOptions
+            finally
             {
-                WriteIndented = true
-            });
-
-            await File.WriteAllTextAsync(ArchiveFilePath, json);
-
-            tasks.Remove(taskID);
-
-            await SaveTasks();
+                _lock.Release();
+            }
         }
 
         public async Task AddDaysToTask(string taskID, int days)
@@ -165,12 +154,16 @@ namespace DiscordTaskBot.Services
             await _lock.WaitAsync();
             try
             {
-                if (tasks.ContainsKey(taskID))
-                {
-                    tasks[taskID].CompletionDate = tasks[taskID].CompletionDate.AddDays(days);
-                }
+                var task = _taskCollection.FindById(taskID);
+                if (task == null) return;
+
+                task.CompletionDate = task.CompletionDate.AddDays(days);
+                _taskCollection.Update(task);
             }
-            finally { _lock.Release(); }
+            finally
+            {
+                _lock.Release();
+            }
         }
     }
 }
