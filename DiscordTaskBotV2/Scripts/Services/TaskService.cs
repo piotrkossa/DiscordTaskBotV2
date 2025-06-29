@@ -37,6 +37,7 @@ namespace DiscordTaskBot.Services
             {
                 task.State += 1;
                 _taskCollection.Update(task);
+                Console.WriteLine((int)task.State);
             }
         }
 

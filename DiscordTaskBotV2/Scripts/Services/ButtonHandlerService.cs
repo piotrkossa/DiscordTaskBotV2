@@ -57,8 +57,9 @@ namespace DiscordTaskBot.Services
                             return;
                         }
                         _taskService.IncreaseTaskState(taskID);
+                        taskData = _taskService.GetTaskByID(taskID);
 
-                        (var embed, var components) = BuilderHelper.BuildMessage(taskData, taskID);
+                        (var embed, var components) = BuilderHelper.BuildMessage(taskData!, taskID);
 
                         await _discordService.UpdateMessageAsync(embed, components, message);
                     }
@@ -70,7 +71,7 @@ namespace DiscordTaskBot.Services
                             return;
                         }
                         _taskService.IncreaseTaskState(taskID);
-                        _taskService.GetTaskByID(taskID);
+                        taskData = _taskService.GetTaskByID(taskID);
 
                         (var embed, var components) = BuilderHelper.BuildMessage(taskData!, taskID);
 
