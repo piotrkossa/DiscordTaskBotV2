@@ -63,7 +63,7 @@ public class Program
 
         var bot = services.GetRequiredService<Bot>();
 
-        await services.GetRequiredService<TaskService>().LoadTasksAsync();
+        services.GetRequiredService<TaskService>();
 
         services.GetRequiredService<JobExecutionTrackerService>();
 

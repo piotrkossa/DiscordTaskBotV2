@@ -31,7 +31,7 @@ namespace DiscordTaskBot.Services
             var action = parts[0];
             var taskID = parts[1];
 
-            var taskData = await _taskService.GetTaskByIDAsync(taskID);
+            var taskData = _taskService.GetTaskByID(taskID);
             if (taskData == null)
             {
                 await component.FollowupAsync("Task not found.", ephemeral: true);
@@ -56,7 +56,7 @@ namespace DiscordTaskBot.Services
                             await component.FollowupAsync("It is not your task!", ephemeral: true);
                             return;
                         }
-                        await _taskService.IncreaseTaskState(taskID);
+                        _taskService.IncreaseTaskState(taskID);
 
                         (var embed, var components) = BuilderHelper.BuildMessage(taskData, taskID);
 
@@ -69,8 +69,8 @@ namespace DiscordTaskBot.Services
                             await component.FollowupAsync("You do not have permissions!", ephemeral: true);
                             return;
                         }
-                        await _taskService.IncreaseTaskState(taskID);
-                        taskData = await _taskService.GetTaskByIDAsync(taskID);
+                        _taskService.IncreaseTaskState(taskID);
+                        _taskService.GetTaskByID(taskID);
 
                         (var embed, var components) = BuilderHelper.BuildMessage(taskData!, taskID);
 
@@ -83,7 +83,7 @@ namespace DiscordTaskBot.Services
                             return;
                         }
                         
-                        await _taskService.UpdateTaskLocationAsync(taskID, movedMessage.Channel.Id, movedMessage.Id);
+                        _taskService.UpdateTaskLocation(taskID, movedMessage.Channel.Id, movedMessage.Id);
 
                         await component.FollowupAsync("Task moved to archive,", ephemeral: true);
                     }
@@ -94,7 +94,7 @@ namespace DiscordTaskBot.Services
                         await component.FollowupAsync("You do not have permissions!", ephemeral: true);
                         return;
                     }
-                    await _taskService.RemoveTask(taskID);
+                    _taskService.RemoveTask(taskID);
                     await component.Message.DeleteAsync();
                     await component.FollowupAsync("Task deleted.", ephemeral: true);
                     return;

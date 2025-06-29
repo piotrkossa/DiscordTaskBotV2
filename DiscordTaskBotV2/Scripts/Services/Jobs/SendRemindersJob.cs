@@ -16,7 +16,7 @@ namespace DiscordTaskBot.Services.Jobs
 
         public override async Task ExecuteInternal(IJobExecutionContext? context)
         {
-            foreach (var task in await _taskService.GetAllTasksAsync())
+            foreach (var task in _taskService.GetAllTasks())
             {
                 var taskData = task.Value;
 
