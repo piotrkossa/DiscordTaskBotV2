@@ -48,11 +48,19 @@ namespace DiscordTaskBot.Core
         {
             Console.WriteLine("Bot connected.");
 
-            await _interactionService.AddModulesAsync(Assembly.GetExecutingAssembly(), _services);
+            if (_interactionService.SlashCommands.Count == 0)
+            {
+                await _interactionService.AddModulesAsync(Assembly.GetExecutingAssembly(), _services);
+                await _interactionService.RegisterCommandsToGuildAsync(
+                    ulong.Parse(Environment.GetEnvironmentVariable("GUILD")!), 
+                    true);
 
-            await _interactionService.RegisterCommandsToGuildAsync(ulong.Parse(Environment.GetEnvironmentVariable("GUILD")!), true);
-
-            Console.WriteLine("Slash commands registered.");
+                Console.WriteLine("Slash commands registered.");
+            }
+            else
+            {
+                Console.WriteLine("Slash commands were already loaded — skipping registration.");
+            }
         }
 
         private async Task OnInteraction(SocketInteraction interaction)
