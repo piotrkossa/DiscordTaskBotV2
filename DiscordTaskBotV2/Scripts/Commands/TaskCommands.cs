@@ -32,7 +32,7 @@ namespace DiscordTaskBot.Commands
             var response = await FollowupAsync("Creating Task...");
 
             var taskData = TaskData.FromDiscord(description, user, daysToDeadline, response);
-            var taskID = _taskService.AddTask(taskData);
+            var taskID = await _taskService.AddTaskAsync(taskData);
 
 
             (var embed, var components) = BuilderHelper.BuildMessage(taskData, taskID);
@@ -66,7 +66,7 @@ namespace DiscordTaskBot.Commands
                 .WithMinValues(1)
                 .WithMaxValues(1);
 
-            foreach (var task in _taskService.GetAllTasks())
+            foreach (var task in await _taskService.GetAllTasksAsync())
             {
                 var user = await _client.GetUserAsync(task.Value.UserID);
 
@@ -89,7 +89,7 @@ namespace DiscordTaskBot.Commands
             int daysToAdd = int.Parse(customID);
             var taskID = selected;
 
-            var taskData = _taskService.GetTaskByID(taskID);
+            var taskData = await _taskService.GetTaskByIDAsync(taskID);
 
             if (taskData == null)
             {
@@ -101,7 +101,7 @@ namespace DiscordTaskBot.Commands
                 return;
             }
 
-            _taskService.AddDaysToTask(taskID, daysToAdd);
+            await _taskService.AddDaysToTaskAsync(taskID, daysToAdd);
             await _discordService.CreateAndUpdateMessageAsync(taskID, taskData);
 
             await ModifyOriginalResponseAsync(msg =>

@@ -16,14 +16,14 @@ namespace DiscordTaskBot.Services.Jobs
 
         public override async Task ExecuteInternal(IJobExecutionContext? context)
         {
-            foreach (var task in _taskService.GetAllTasks())
+            foreach (var task in await _taskService.GetAllTasksAsync())
             {
                 (var embed, var components) = BuilderHelper.BuildMessage(task.Value, task.Key);
                 var message = await _discordService.GetMessageAsync(task.Value.MessageID, task.Value.ChannelID);
                 if (message != null)
                     await _discordService.UpdateMessageAsync(embed, components, message);
                 else
-                    _taskService.RemoveTask(task.Key);
+                    await _taskService.RemoveTaskAsync(task.Key);
             }
 
             Console.WriteLine("Tasks updated!");

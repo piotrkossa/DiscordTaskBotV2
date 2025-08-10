@@ -31,7 +31,7 @@ namespace DiscordTaskBot.Services
             var action = parts[0];
             var taskID = parts[1];
 
-            var taskData = _taskService.GetTaskByID(taskID);
+            var taskData = await _taskService.GetTaskByIDAsync(taskID);
             if (taskData == null)
             {
                 await component.FollowupAsync("Task not found.", ephemeral: true);
@@ -56,8 +56,8 @@ namespace DiscordTaskBot.Services
                             await component.FollowupAsync("It is not your task!", ephemeral: true);
                             return;
                         }
-                        _taskService.IncreaseTaskState(taskID);
-                        taskData = _taskService.GetTaskByID(taskID);
+                        await _taskService.IncreaseTaskStateAsync(taskID);
+                        taskData = await _taskService.GetTaskByIDAsync(taskID);
 
                         (var embed, var components) = BuilderHelper.BuildMessage(taskData!, taskID);
 
@@ -70,8 +70,8 @@ namespace DiscordTaskBot.Services
                             await component.FollowupAsync("You do not have permissions!", ephemeral: true);
                             return;
                         }
-                        _taskService.IncreaseTaskState(taskID);
-                        taskData = _taskService.GetTaskByID(taskID);
+                        await _taskService.IncreaseTaskStateAsync(taskID);
+                        taskData = await _taskService.GetTaskByIDAsync(taskID);
 
                         (var embed, var components) = BuilderHelper.BuildMessage(taskData!, taskID);
 
@@ -84,7 +84,7 @@ namespace DiscordTaskBot.Services
                             return;
                         }
                         
-                        _taskService.UpdateTaskLocation(taskID, movedMessage.Channel.Id, movedMessage.Id);
+                        await _taskService.UpdateTaskLocationAsync(taskID, movedMessage.Channel.Id, movedMessage.Id);
 
                         await component.FollowupAsync("Task moved to archive,", ephemeral: true);
                     }
@@ -95,7 +95,7 @@ namespace DiscordTaskBot.Services
                         await component.FollowupAsync("You do not have permissions!", ephemeral: true);
                         return;
                     }
-                    _taskService.RemoveTask(taskID);
+                    await _taskService.RemoveTaskAsync(taskID);
                     await component.Message.DeleteAsync();
                     await component.FollowupAsync("Task deleted.", ephemeral: true);
                     return;

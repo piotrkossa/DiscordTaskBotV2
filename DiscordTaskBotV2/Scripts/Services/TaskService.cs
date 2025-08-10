@@ -1,88 +1,89 @@
-using LiteDB;
+using LiteDB.Async;
 using DiscordTaskBot.Models;
 
 namespace DiscordTaskBot.Services
 {
     public class TaskService
     {
-        private readonly LiteDatabase _liteDatabase;
-        private readonly ILiteCollection<TaskData> _taskCollection;
+        private readonly LiteDatabaseAsync _liteDatabase;
+        private readonly ILiteCollectionAsync<TaskData> _taskCollection;
 
         public TaskService()
         {
-            _liteDatabase = new LiteDatabase(@"tasks.db");
+            _liteDatabase = new LiteDatabaseAsync(@"tasks.db");
             _taskCollection = _liteDatabase.GetCollection<TaskData>("tasks");
-            _taskCollection.EnsureIndex(x => x.ID);
+            _taskCollection.EnsureIndexAsync(x => x.ID).Wait();
         }
         
 
-        public string AddTask(TaskData task)
+        public async Task<string> AddTaskAsync(TaskData task)
         {
-            _taskCollection.Upsert(task);
+            await _taskCollection.UpsertAsync(task);
             return task.ID;
         }
 
-        public void RemoveTask(string taskID)
+        public async Task RemoveTaskAsync(string taskID)
         {
-            _taskCollection.Delete(taskID);
+            await _taskCollection.DeleteAsync(taskID);
         }
 
-        public void IncreaseTaskState(string taskID)
+        public async Task IncreaseTaskStateAsync(string taskID)
         {
-            var task = _taskCollection.FindById(taskID);
-            if (task == null) return;
+            TaskData taskData = await _taskCollection.FindByIdAsync(taskID);
+            if (taskData == null) return;
 
             var maxState = Enum.GetValues<TaskStates>().Max();
-            if (task.State < maxState)
+            if (taskData.State < maxState)
             {
-                task.State += 1;
-                _taskCollection.Update(task);
-                Console.WriteLine((int)task.State);
+                taskData.State += 1;
+                await _taskCollection.UpdateAsync(taskData);
+                Console.WriteLine((int)taskData.State);
             }
         }
 
-        public Dictionary<string, TaskData> GetAllTasks()
+        public async Task<Dictionary<string, TaskData>> GetAllTasksAsync()
         {
-            var tasks = _taskCollection.FindAll().ToDictionary(t => t.ID, t => t);
-            return tasks;
+            var tasks = await _taskCollection.FindAllAsync();
+            return tasks.ToDictionary(t => t.ID, t => t);
         }
 
-        public TaskData? GetTaskByID(string taskID)
+        public async Task<TaskData?> GetTaskByIDAsync(string taskID)
         {
-            return _taskCollection.FindById(taskID);
+            var id = await _taskCollection.FindByIdAsync(taskID);
+            return id;
         }
 
-        public void UpdateTaskLocation(string taskID, ulong newChannelID, ulong newMessageID)
+        public async Task UpdateTaskLocationAsync(string taskID, ulong newChannelID, ulong newMessageID)
         {
-            var task = _taskCollection.FindById(taskID);
+            var task = await _taskCollection.FindByIdAsync(taskID);
             if (task != null)
             {
                 task.ChannelID = newChannelID;
                 task.MessageID = newMessageID;
-                _taskCollection.Update(task);
+                await _taskCollection.UpdateAsync(task);
 
-                MoveTaskToArchive(taskID);
+                await MoveTaskToArchiveAsync(taskID);
             }
         }
 
-        private void MoveTaskToArchive(string taskID)
+        private async Task MoveTaskToArchiveAsync(string taskID)
         {
-            var task = _taskCollection.FindById(taskID);
+            var task = await _taskCollection.FindByIdAsync(taskID);
             if (task == null) return;
 
             var archiveCollection = _liteDatabase.GetCollection<TaskData>("tasks_archive");
 
-            archiveCollection.Upsert(task);
-            _taskCollection.Delete(taskID);
+            await archiveCollection.UpsertAsync(task);
+            await _taskCollection.DeleteAsync(taskID);
         }
 
-        public void AddDaysToTask(string taskID, int days)
+        public async Task AddDaysToTaskAsync(string taskID, int days)
         {
-            var task = _taskCollection.FindById(taskID);
+            var task = await _taskCollection.FindByIdAsync(taskID);
             if (task == null) return;
 
             task.CompletionDate = task.CompletionDate.AddDays(days);
-            _taskCollection.Update(task);
+            await _taskCollection.UpdateAsync(task);
         }
     }
 }
