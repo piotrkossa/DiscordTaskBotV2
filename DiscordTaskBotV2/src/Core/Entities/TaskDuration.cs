@@ -32,6 +32,11 @@ public class TaskDuration
         DueDate = newDate;
     }
 
+    public void Reschedule(int daysToAdd)
+    {
+        DueDate = DueDate.AddDays(daysToAdd);
+    }
+
     private static DateTime GetLocalDateFromUtc(DateTime currentUtcTime, TimeZoneInfo timeZone)
     {
         return TimeZoneInfo.ConvertTimeFromUtc(currentUtcTime, timeZone);

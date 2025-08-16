@@ -18,6 +18,8 @@
     <PackageReference Include="Quartz.Extensions.DependencyInjection" Version="3.14.0" />
     <PackageReference Include="Quartz.Extensions.Hosting" Version="3.14.0" />
     <PackageReference Include="Xunit" Version="2.9.3" />
+
+    <Compile Remove="OLDSRC\**\*.cs" />
   </ItemGroup>
 
 </Project>

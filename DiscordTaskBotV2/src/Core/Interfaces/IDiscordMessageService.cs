@@ -1,6 +1,6 @@
 namespace DiscordTaskBot.Core;
 
-public interface IDiscordService
+public interface IDiscordMessageService
 {
     // returns task location
     Task<TaskLocation> CreateTaskMessageAsync(ulong channelID, TaskItem taskItem);

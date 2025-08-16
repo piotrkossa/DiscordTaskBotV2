@@ -1,10 +1,10 @@
 namespace DiscordTaskBot.Core;
 
-public class TaskService(ITaskRepository taskRepository, IUserInformationService userInformationService, IDiscordService discordService)
+public class TaskService(ITaskRepository taskRepository, IUserInformationService userInformationService, IDiscordMessageService discordService)
 {
     private readonly ITaskRepository _taskRepository = taskRepository;
     private readonly IUserInformationService _userInformationService = userInformationService;
-    private readonly IDiscordService _discordService = discordService;
+    private readonly IDiscordMessageService _discordService = discordService;
 
     public async Task CreateTaskAsync(string description, TaskDuration taskDuration, ulong requesterID, ulong assigneeID, ulong channelID)
     {
@@ -65,7 +65,7 @@ public class TaskService(ITaskRepository taskRepository, IUserInformationService
 
         TaskItem taskItem = await GetTaskAsync(taskID);
 
-        taskItem.TaskDuration.Reschedule(taskItem.TaskDuration.DueDate.AddDays(daysToAdd));
+        taskItem.TaskDuration.Reschedule(daysToAdd);
 
         await _taskRepository.UpdateTaskAsync(taskItem);
     }
@@ -79,7 +79,7 @@ public class TaskService(ITaskRepository taskRepository, IUserInformationService
     {
         if (!await _userInformationService.IsAdminAsync(userID))
         {
-            throw new DomainException("Only administrators can delete tasks");
+            throw new DomainException("Only administrators can perform that action");
         }
     }
 }
