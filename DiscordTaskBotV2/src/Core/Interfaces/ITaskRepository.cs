@@ -7,6 +7,8 @@ public interface ITaskRepository
     Task<bool> DeleteTaskByIDAsync(string taskID);
 
     Task<TaskItem?> GetTaskByIDAsync(string taskId);
-    
+
     Task UpdateTaskAsync(TaskItem taskItem);
+    
+    Task<IEnumerable<TaskItem>> GetAllTasksAsync();
 }

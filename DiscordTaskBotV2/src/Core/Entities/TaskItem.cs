@@ -1,18 +1,30 @@
 namespace DiscordTaskBot.Core;
 
-public class TaskItem(string description, TaskDuration taskDuration, ulong asigneeID)
+public class TaskItem
 {
-    public string ID = Guid.NewGuid().ToString();
+    public string ID { get; }
     
-    public string Description { get; private set; } = description;
+    public string Description { get; private set; }
 
-    public TaskDuration TaskDuration { get; private set; } = taskDuration;
+    public TaskDuration TaskDuration { get; private set; }
 
-    public TaskState State { get; private set; } = TaskState.NOT_STARTED;
+    public TaskState State { get; private set; }
 
-    public ulong AssigneeID { get; private set; } = asigneeID;
+    public ulong AssigneeID { get; private set; }
 
     public TaskLocation? TaskLocation { get; private set; }
+
+    public TaskItem(string description, TaskDuration taskDuration, ulong asigneeID)
+    {
+        ID = Guid.NewGuid().ToString();
+        Description = description;
+        TaskDuration = taskDuration;
+        State = TaskState.NOT_STARTED;
+        AssigneeID = asigneeID;
+    }
+
+    private TaskItem() {}
+
 
     public void SetLocation(TaskLocation taskLocation)
     {
