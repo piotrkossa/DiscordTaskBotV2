@@ -2,45 +2,33 @@ namespace DiscordTaskBot.Core;
 
 public class TaskDuration
 {
-    public TimeZoneInfo TimeZone { get; private set; }
-
-    public DateTime CreationDate { get; }
-    public DateTime DueDate { get; private set; }
+    public DateTime UtcCreationDate { get; }
+    public DateTime UtcDueDate { get; private set; }
 
     private TaskDuration() { }
 
-    public TaskDuration(DateTime utcCreationDate, DateTime utcDueDate, TimeZoneInfo timeZone)
+    public TaskDuration(DateTime utcCreationDate, DateTime utcDueDate)
     {
-        TimeZone = timeZone;
+        UtcCreationDate = utcCreationDate;
 
-        CreationDate = GetLocalDateFromUtc(utcCreationDate, TimeZone);
-
-        DueDate = GetLocalDateFromUtc(utcDueDate, TimeZone);
+        UtcDueDate = utcDueDate;
     }
 
+    public DateTime LocalCreationDate(TimeZoneInfo timeZoneInfo) => TimeZoneInfo.ConvertTimeFromUtc(UtcCreationDate, timeZoneInfo);
+    public DateTime LocalDueDate(TimeZoneInfo timeZoneInfo) => TimeZoneInfo.ConvertTimeFromUtc(UtcDueDate, timeZoneInfo);
 
-    public int GetRemainingDays(DateTime currentUtcTime)
+    public TimeSpan UtcDueDateOffset(DateTime currentUtcTime)
     {
-        return Math.Max(0, (DueDate - GetLocalDateFromUtc(currentUtcTime, TimeZone)).Days);
+        return UtcDueDate - currentUtcTime;
     }
 
-    public int GetOverdueDays(DateTime currentUtcTime)
+    public void Reschedule(DateTime newUtcDate)
     {
-        return Math.Max(0, (GetLocalDateFromUtc(currentUtcTime, TimeZone) - DueDate).Days);
-    }
-
-    public void Reschedule(DateTime newDate)
-    {
-        DueDate = newDate;
+        UtcDueDate = newUtcDate;
     }
 
     public void Reschedule(int daysToAdd)
     {
-        DueDate = DueDate.AddDays(daysToAdd);
-    }
-
-    private static DateTime GetLocalDateFromUtc(DateTime currentUtcTime, TimeZoneInfo timeZone)
-    {
-        return TimeZoneInfo.ConvertTimeFromUtc(currentUtcTime, timeZone);
+        UtcDueDate = UtcDueDate.AddDays(daysToAdd);
     }
 }

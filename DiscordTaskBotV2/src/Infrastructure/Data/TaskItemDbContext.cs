@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using DiscordTaskBot.Core;
 
+/*
+
 namespace DiscordTaskBot.Infrastructure;
 
 public class TaskItemDbContext(DbContextOptions options) : DbContext(options)
@@ -53,3 +55,5 @@ public class TaskItemDbContext(DbContextOptions options) : DbContext(options)
         base.OnModelCreating(modelBuilder);
     }
 }
+
+*/
