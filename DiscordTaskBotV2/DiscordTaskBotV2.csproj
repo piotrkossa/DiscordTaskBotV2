@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <PackageReference Include="Discord.Net" Version="3.17.4" />
+    <PackageReference Include="MediatR" Version="13.0.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.8" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.8" />
     <PackageReference Include="Quartz" Version="3.14.0" />
@@ -16,6 +17,7 @@
     <PackageReference Include="Quartz.Extensions.Hosting" Version="3.14.0" />
 
     <Compile Remove="OLDSRC\**\*.cs" />
+    <Compile Remove="OLDSRC2\**\*.cs" />
 
     <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.1" />
   </ItemGroup>

@@ -6,9 +6,12 @@ public interface ITaskRepository
     // returns true if task was found and deleted, false if task was not found
     Task<bool> DeleteTaskByIDAsync(string taskID);
 
+    // returns TaskItem if found, null if not found
     Task<TaskItem?> GetTaskByIDAsync(string taskId);
 
-    Task UpdateTaskAsync(TaskItem taskItem);
+    // returns true if task updated successfully, false if not found
+    Task<bool> UpdateTaskAsync(TaskItem taskItem);
     
+    // returns all tasks
     Task<IEnumerable<TaskItem>> GetAllTasksAsync();
 }
