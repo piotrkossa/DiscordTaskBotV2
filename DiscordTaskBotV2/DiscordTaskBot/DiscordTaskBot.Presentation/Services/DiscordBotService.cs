@@ -1,7 +1,6 @@
 namespace DiscordTaskBot.Presentation;
 
 using Discord;
-using Discord.Interactions;
 using Discord.WebSocket;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -66,7 +65,7 @@ public class DiscordBotService
     {
         foreach (var handler in _eventHandlers)
         {
-            handler.RegisterEvents();
+            handler.Initialize();
         }
 
         _logger.LogDebug("Registered {Count} custom event handlers", _eventHandlers.Count);

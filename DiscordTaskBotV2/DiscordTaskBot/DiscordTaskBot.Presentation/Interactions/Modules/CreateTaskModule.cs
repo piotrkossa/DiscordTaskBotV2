@@ -15,10 +15,10 @@ public class CreateTaskModule(IMediator mediator, ILogger<CreateTaskModule> logg
         [Summary("user", "User to whom the task will be assigned")] IUser user,
         [Summary("daysToDeadline", "Days allocated to complete the task")] int daysToDeadline)
     {
-        await DeferAsync();
-
         await base.ExecuteWithHandlingAsync(async () =>
         {
+            await DeferAsync();
+            
             var response = await FollowupAsync("Creating Task...");
 
             var utcNow = DateTime.UtcNow;

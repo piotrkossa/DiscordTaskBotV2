@@ -15,7 +15,7 @@ public class InteractionCreatedHandler(
     private readonly IServiceProvider _services = services;
     private readonly InteractionService _interactionService = interactionService;
 
-    public void RegisterEvents()
+    public void Initialize()
     {
         _client.InteractionCreated += OnInteractionCreated;
     }

@@ -9,7 +9,7 @@ public class OnLogHandler(ILogger<OnLogHandler> logger, DiscordSocketClient clie
     private readonly DiscordSocketClient _client = client;
     private readonly ILogger<OnLogHandler> _logger = logger;
 
-    public void RegisterEvents()
+    public void Initialize()
     {
         _client.Log += OnLog;
     }

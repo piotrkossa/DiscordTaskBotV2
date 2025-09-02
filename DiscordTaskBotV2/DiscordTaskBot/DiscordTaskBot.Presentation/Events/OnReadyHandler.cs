@@ -20,7 +20,14 @@ public class OnReadyHandler(
 
     private readonly ILogger<OnReadyHandler> _logger = logger;
 
-    public async Task OnBotReadyAsync()
+
+    public void Initialize()
+    {
+        _client.Ready += OnReady;
+    }
+
+
+    public async Task OnReady()
     {
         _logger.LogInformation("Bot connected as {Username}#{Discriminator}", 
             _client.CurrentUser.Username, 
@@ -28,12 +35,6 @@ public class OnReadyHandler(
         
         await RegisterSlashCommandsAsync();
     }
-
-    public void RegisterEvents()
-    {
-        return;
-    }
-
 
     private async Task RegisterSlashCommandsAsync()
     {
@@ -46,7 +47,7 @@ public class OnReadyHandler(
             }
 
             await _interactionService.AddModulesAsync(Assembly.GetExecutingAssembly(), _services);
-            
+
             if (_options.RegisterCommandsGlobally)
             {
                 await _interactionService.RegisterCommandsGloballyAsync();
