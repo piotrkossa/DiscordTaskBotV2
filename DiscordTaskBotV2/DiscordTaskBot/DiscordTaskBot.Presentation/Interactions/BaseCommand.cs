@@ -7,7 +7,7 @@ using DiscordTaskBot.Infrastructure;
 using MediatR;
 using Microsoft.Extensions.Logging;
 
-public abstract class BaseModule(IMediator mediator, ILogger logger) : InteractionModuleBase<SocketInteractionContext>
+public abstract class BaseCommand(IMediator mediator, ILogger logger) : InteractionModuleBase<SocketInteractionContext>
 {
     protected readonly IMediator _mediator = mediator;
     protected readonly ILogger _logger = logger;

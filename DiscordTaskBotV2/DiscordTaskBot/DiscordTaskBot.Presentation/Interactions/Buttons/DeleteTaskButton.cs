@@ -1,11 +1,14 @@
-using Discord.WebSocket;
-
 namespace DiscordTaskBot.Presentation;
 
-public class DeleteTaskButton
+using Discord.Interactions;
+using Discord.WebSocket;
+using MediatR;
+using Microsoft.Extensions.Logging;
+
+public class DeleteTaskButton(IMediator mediator, ILogger<DeleteTaskButton> logger) : BaseCommand(mediator, logger)
 {
-    [ButtonHandler(DiscordButtonAction.DELETE)]
-    public async Task Handle(SocketMessageComponent component, string taskId)
+    [ComponentInteraction(ButtonActions.TaskDelete + ":*")]
+    public async Task DeleteTask()
     {
         
     }

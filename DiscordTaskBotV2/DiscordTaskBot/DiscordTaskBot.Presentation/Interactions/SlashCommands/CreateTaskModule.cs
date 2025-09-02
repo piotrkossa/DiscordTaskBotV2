@@ -7,7 +7,7 @@ using MediatR;
 using DiscordTaskBot.Domain;
 using Microsoft.Extensions.Logging;
 
-public class CreateTaskModule(IMediator mediator, ILogger<CreateTaskModule> logger) : BaseModule(mediator, logger)
+public class CreateTaskModule(IMediator mediator, ILogger<CreateTaskModule> logger) : BaseCommand(mediator, logger)
 {
     [SlashCommand("createtask", "Creates new task")]
     public async Task CreateTask(

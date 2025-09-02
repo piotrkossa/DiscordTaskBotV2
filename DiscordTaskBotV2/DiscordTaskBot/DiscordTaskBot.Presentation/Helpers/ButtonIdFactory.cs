@@ -1,28 +1,36 @@
 namespace DiscordTaskBot.Presentation;
 
+public static class ButtonActions
+{
+    public const string TaskDelete = "button_taskdelete";
+    public const string TaskRaiseState = "button_taskraisestate";
+}
+
+
 public static class ButtonIdFactory
 {
-    private const char Separator = '|';
+    private const char Separator = ':';
+    // template for button: button_action:taskId
 
-    public static string TaskComplete(string taskId)
-        => $"task{Separator}complete{Separator}{taskId}";
+    public static string TaskRaiseState(string taskId)
+        => $"{ButtonActions.TaskRaiseState}{Separator}{taskId}";
 
     public static string TaskDelete(string taskId)
-        => $"task{Separator}delete{Separator}{taskId}";
+        => $"{ButtonActions.TaskDelete}{Separator}{taskId}";
 
-    public static string UserBan(string userId)
-        => $"user{Separator}ban{Separator}{userId}";
 
-    public static (string Domain, string Action, string Data) Parse(string customId)
+    public static bool TryParseTask(string customId, out string action, out string taskId)
     {
-        var parts = customId.Split(Separator, 3);
-        if (parts.Length < 2)
-            throw new InvalidOperationException($"Invalid CustomId: {customId}");
+        action = "";
+        taskId = "";
 
-        return (
-            Domain: parts[0],
-            Action: parts[1],
-            Data: parts.Length > 2 ? parts[2] : string.Empty
-        );
+        var parts = customId.Split(Separator, 2);
+        if (parts.Length != 2 || string.IsNullOrEmpty(action) || string.IsNullOrEmpty(taskId))
+            return false;
+
+        action = parts[0];
+        taskId = parts[1];
+
+        return true;
     }
 }
