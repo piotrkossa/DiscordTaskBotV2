@@ -9,7 +9,20 @@ using DiscordTaskBot.Domain;
 public class DiscordTaskMessageDirector(TaskItem taskItem)
 {
     private readonly TaskItem _taskItem = taskItem;
-    public MessageProperties BuildNotStartedTaskMessage()
+
+    public MessageProperties BuildByState(TaskState state)
+    {
+        return state switch
+        {
+            TaskState.NOT_STARTED => BuildNotStarted(),
+            TaskState.IN_PROGRESS => BuildInProgress(),
+            TaskState.COMPLETED => BuildCompleted(),
+            TaskState.ARCHIVED => BuildArchived(),
+            _ => throw new ArgumentException($"State {state} is not handled")
+        };
+    }
+
+    public MessageProperties BuildNotStarted()
     {
         MessageProperties messageProperties = new();
 
@@ -19,7 +32,7 @@ public class DiscordTaskMessageDirector(TaskItem taskItem)
 
         return messageProperties;
     }
-    public MessageProperties BuildInProgressTaskMessage()
+    public MessageProperties BuildInProgress()
     {
         MessageProperties messageProperties = new();
 
@@ -27,7 +40,7 @@ public class DiscordTaskMessageDirector(TaskItem taskItem)
 
         return messageProperties;
     }
-    public MessageProperties BuildCompletedTaskMessage()
+    public MessageProperties BuildCompleted()
     {
         MessageProperties messageProperties = new();
 
@@ -35,7 +48,7 @@ public class DiscordTaskMessageDirector(TaskItem taskItem)
 
         return messageProperties;
     }
-    public MessageProperties BuildArchivedTaskMessage()
+    public MessageProperties BuildArchived()
     {
         MessageProperties messageProperties = new();
 

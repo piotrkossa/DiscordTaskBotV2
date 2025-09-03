@@ -36,4 +36,9 @@ public class TaskItem : Entity
         State = newState;
         _domainEvents.Add(new TaskStateUpdatedEvent(Id, State));
     }
+
+    public void RaiseState()
+    {
+        ChangeState(State + 1);
+    }
 }

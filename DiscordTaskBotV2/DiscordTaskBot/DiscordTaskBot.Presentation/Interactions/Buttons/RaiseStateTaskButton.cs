@@ -1,6 +1,7 @@
 namespace DiscordTaskBot.Presentation;
 
 using Discord.Interactions;
+using Discord.WebSocket;
 using DiscordTaskBot.Application;
 using MediatR;
 using Microsoft.Extensions.Logging;
@@ -16,8 +17,10 @@ public class RaiseStateTaskButton(IMediator mediator, ILogger<RaiseStateTaskButt
 
             if (!Guid.TryParse(taskId, out var result)) throw new ArgumentException($"Invalid task Id {taskId}");
 
-            await base._mediator.Send(new RaiseTaskStateCommand(result, Context.User.Id));
+            var taskItem = await base._mediator.Send(new RaiseTaskStateCommand(result, Context.User.Id));
 
+            var component = (SocketMessageComponent)Context.Interaction;
+            await component.Message.ModifyAsync(msg => new DiscordTaskMessageDirector(taskItem).BuildCompletedTaskMessage());
         });
     }
 }
