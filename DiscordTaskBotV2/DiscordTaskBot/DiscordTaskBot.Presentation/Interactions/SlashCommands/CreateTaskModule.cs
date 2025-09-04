@@ -25,10 +25,7 @@ public class CreateTaskModule(IMediator mediator, ILogger<CreateTaskModule> logg
 
             var taskItem = await base._mediator.Send(new CreateTaskCommand(description, new TaskDuration(utcNow, utcNow.AddDays(daysToDeadline)), user.Id, Context.User.Id));
 
-            await response.ModifyAsync(msg =>
-            {
-                msg.Content = taskItem.Description;
-            });
+            await response.ModifyAsync(msg => msg = new DiscordTaskMessageDirector(taskItem).BuildNotStarted());
         });
     }
 }

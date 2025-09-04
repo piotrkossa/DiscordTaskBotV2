@@ -20,7 +20,7 @@ public class RaiseStateTaskButton(IMediator mediator, ILogger<RaiseStateTaskButt
             var taskItem = await base._mediator.Send(new RaiseTaskStateCommand(result, Context.User.Id));
 
             var component = (SocketMessageComponent)Context.Interaction;
-            await component.Message.ModifyAsync(msg => new DiscordTaskMessageDirector(taskItem).BuildCompletedTaskMessage());
+            await component.Message.ModifyAsync(msg => msg = new DiscordTaskMessageDirector(taskItem).BuildByState(taskItem.State));
         });
     }
 }

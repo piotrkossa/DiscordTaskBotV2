@@ -1,8 +1,5 @@
-using Microsoft.EntityFrameworkCore.Query.SqlExpressions;
-
 namespace DiscordTaskBot.Presentation;
 
-using System.ComponentModel;
 using Discord;
 using DiscordTaskBot.Domain;
 
@@ -28,7 +25,10 @@ public class DiscordTaskMessageDirector(TaskItem taskItem)
 
         messageProperties.Embed = CreateEmbed(Color.LightGrey);
 
-        messageProperties.Components = new ComponentBuilder().WithButton(GetDeleteButton());
+        var builder = new ComponentBuilder();
+        AddDeleteButton(builder);
+        builder.WithButton("Start", ButtonIdFactory.TaskRaiseState(_taskItem.Id), ButtonStyle.Secondary);
+        messageProperties.Components = builder.Build();
 
         return messageProperties;
     }
@@ -38,6 +38,12 @@ public class DiscordTaskMessageDirector(TaskItem taskItem)
 
         messageProperties.Embed = CreateEmbed(Color.Orange);
 
+        var builder = new ComponentBuilder();
+        AddDeleteButton(builder);
+        builder.WithButton("Complete", ButtonIdFactory.TaskRaiseState(_taskItem.Id), ButtonStyle.Success);
+        messageProperties.Components = builder.Build();
+
+
         return messageProperties;
     }
     public MessageProperties BuildCompleted()
@@ -45,6 +51,11 @@ public class DiscordTaskMessageDirector(TaskItem taskItem)
         MessageProperties messageProperties = new();
 
         messageProperties.Embed = CreateEmbed(Color.Green);
+
+        var builder = new ComponentBuilder();
+        AddDeleteButton(builder);
+        builder.WithButton("Archive", ButtonIdFactory.TaskRaiseState(_taskItem.Id), ButtonStyle.Primary);
+        messageProperties.Components = builder.Build();
 
         return messageProperties;
     }
@@ -57,13 +68,9 @@ public class DiscordTaskMessageDirector(TaskItem taskItem)
         return messageProperties;
     }
 
-    private ButtonComponent GetDeleteButton()
+    private void AddDeleteButton(ComponentBuilder builder)
     {
-        return new ButtonBuilder()
-            .WithLabel("Delete")
-            .WithStyle(ButtonStyle.Danger)
-            .WithCustomId(ButtonIdFactory.TaskDelete(_taskItem.Id))
-            .Build();
+        builder.WithButton("Delete", ButtonIdFactory.TaskDelete(_taskItem.Id), ButtonStyle.Danger);
     }
 
     private Embed CreateEmbed(Color color)
