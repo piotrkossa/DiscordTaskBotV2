@@ -5,11 +5,11 @@ using Microsoft.Extensions.DependencyInjection;
 
 public static class DiscordEventHandlerRegistration
 {
-    public static IServiceCollection AddDiscordEventHandlers(this IServiceCollection services, Assembly assembly)
+    public static IServiceCollection AddDiscordEventHandlers(this IServiceCollection services)
     {
         var handlerType = typeof(IDiscordEventHandler);
 
-        var handlerTypes = assembly.GetTypes()
+        var handlerTypes = Assembly.GetExecutingAssembly().GetTypes()
             .Where(t => t.IsClass && !t.IsAbstract && handlerType.IsAssignableFrom(t))
             .ToList();
 
