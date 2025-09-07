@@ -3,9 +3,9 @@ namespace DiscordTaskBot.Presentation;
 using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 
-public static class DiscordEventHandlerRegistration
+public static class DependencyInjection
 {
-    public static IServiceCollection AddDiscordEventHandlers(this IServiceCollection services)
+    public static IServiceCollection AddPresentation(this IServiceCollection services)
     {
         var handlerType = typeof(IDiscordEventHandler);
 

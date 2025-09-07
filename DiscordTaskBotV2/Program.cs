@@ -1,15 +1,12 @@
-﻿using Discord;
+﻿namespace DiscordTaskBot;
+
+using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using
-
-
 using DiscordTaskBot.Presentation;
-using System.Reflection;
-
-namespace DiscordTaskBot;
+using DiscordTaskBot.Infrastructure;
 
 public class Program
 {
@@ -40,19 +37,8 @@ public class Program
                 return new DiscordSocketClient(config);
             })
             .AddSingleton<InteractionService>()
-            .AddDiscordEventHandlers()
+            .AddInfrastructure()
+            .AddPresentation()
             .BuildServiceProvider();
     }
-
-    private static LogLevel MapLogSeverity(LogSeverity severity) =>
-        severity switch
-        {
-            LogSeverity.Critical => LogLevel.Critical,
-            LogSeverity.Error => LogLevel.Error,
-            LogSeverity.Warning => LogLevel.Warning,
-            LogSeverity.Info => LogLevel.Information,
-            LogSeverity.Verbose => LogLevel.Debug,
-            LogSeverity.Debug => LogLevel.Trace,
-            _ => LogLevel.None
-        };
 }
