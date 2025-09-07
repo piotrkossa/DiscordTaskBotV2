@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using DiscordTaskBot.Presentation;
 using DiscordTaskBot.Infrastructure;
+using System.Reflection;
 
 namespace DiscordTaskBot;
 
@@ -26,6 +27,7 @@ internal class Program
 
         return new ServiceCollection()
             .AddLogging(ConfigureLogging)
+            .AddMediator()
             .AddDiscordServices()
             .AddInfrastructure()
             .AddPresentation()
@@ -39,7 +41,6 @@ internal class Program
 
         if (!File.Exists(configFile))
         {
-            // Tworzymy domyślną konfigurację
             var defaultConfig = new
             {
                 DiscordBot = new DiscordBotOptions()
@@ -86,6 +87,15 @@ internal static class ServiceCollectionExtensions
         services.AddSingleton(client);
         services.AddSingleton(interactionService);
 
+        return services;
+    }
+
+    public static IServiceCollection AddMediator(this IServiceCollection services)
+    {
+        services.AddMediatR(cfg =>
+        {
+            cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly());
+        });
         return services;
     }
 }

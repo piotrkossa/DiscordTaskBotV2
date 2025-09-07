@@ -10,6 +10,8 @@ public class TaskItem : Entity
 
     public ulong AssigneeID { get; private set; }
 
+    private TaskItem() : base(default) {}
+
     public TaskItem(string description, TaskDuration taskDuration, ulong asigneeID) : base(Guid.NewGuid())
     {
         Description = description;

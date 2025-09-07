@@ -13,14 +13,12 @@ public class RaiseStateTaskButton(IMediator mediator, ILogger<RaiseStateTaskButt
     {
         await base.ExecuteWithHandlingAsync(async () =>
         {
-            await DeferAsync();
-
             if (!Guid.TryParse(taskId, out var result)) throw new ArgumentException($"Invalid task Id {taskId}");
 
             var taskItem = await base._mediator.Send(new RaiseTaskStateCommand(result, Context.User.Id));
 
             var component = (SocketMessageComponent)Context.Interaction;
-            await component.Message.ModifyAsync(msg => msg = new DiscordTaskMessageDirector(taskItem).BuildByState(taskItem.State));
+            await component.Message.ModifyAsync(new DiscordTaskMessageDirector(taskItem).BuildByState(taskItem.State));
         });
     }
 }

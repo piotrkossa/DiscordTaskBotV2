@@ -16,7 +16,7 @@ public class DeleteTaskCommandHandler : IRequestHandler<DeleteTaskCommand, TaskI
 
     public async Task<TaskItem> Handle(DeleteTaskCommand request, CancellationToken cancellationToken)
     {
-        if (!await _authorizationService.CanDeleteTasksAsync(request.RequesterID))
+        if (!_authorizationService.CanDeleteTasksAsync(request.RequesterID))
             throw new DomainException("You do not have permission to delete tasks");
 
         var taskItem = await _taskRepository.GetByIdAsync(request.TaskId) ?? throw new DomainException("Task could not be found");

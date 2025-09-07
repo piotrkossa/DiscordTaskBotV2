@@ -8,6 +8,7 @@ public class CreateTaskCommandHandler : IRequestHandler<CreateTaskCommand, TaskI
 {
     private readonly ITaskRepository _taskRepository;
     private readonly IAuthorizationService _authorizationService;
+    
 
     public CreateTaskCommandHandler(ITaskRepository taskRepository, IAuthorizationService authorizationService)
     {
@@ -17,7 +18,7 @@ public class CreateTaskCommandHandler : IRequestHandler<CreateTaskCommand, TaskI
 
     public async Task<TaskItem> Handle(CreateTaskCommand request, CancellationToken cancellationToken)
     {
-        if (!await _authorizationService.CanCreateTasksAsync(request.RequesterID))
+        if (!_authorizationService.CanCreateTasksAsync(request.RequesterID))
             throw new DomainException("You do not have permission to create tasks");
         
         var task = new TaskItem(request.Description, request.TaskDuration, request.AsigneeId);

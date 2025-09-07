@@ -11,13 +11,16 @@ public class DeleteTaskButton(IMediator mediator, ILogger<DeleteTaskButton> logg
     [ComponentInteraction(ButtonActions.TaskDelete + ":*")]
     public async Task DeleteTask(string taskId)
     {
-        await DeferAsync();
+        await base.ExecuteWithHandlingAsync(async () =>
+        {
+            if (!Guid.TryParse(taskId, out var result)) throw new ArgumentException($"Invalid task Id {taskId}");
 
-        if (!Guid.TryParse(taskId, out var result)) throw new ArgumentException($"Invalid task Id {taskId}");
+            await base._mediator.Send(new DeleteTaskCommand(result, Context.User.Id));
 
-        await base._mediator.Send(new DeleteTaskCommand(result, Context.User.Id));
+            var component = (SocketMessageComponent)Context.Interaction;
+            await component.Message.DeleteAsync();
 
-        var component = (SocketMessageComponent)Context.Interaction;
-        await component.Message.DeleteAsync();
+            await FollowupAsync("Task deleted successfully", ephemeral: true);
+        });
     }
 }

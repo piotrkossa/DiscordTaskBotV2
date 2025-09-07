@@ -7,7 +7,7 @@ public class DiscordTaskMessageDirector(TaskItem taskItem)
 {
     private readonly TaskItem _taskItem = taskItem;
 
-    public MessageProperties BuildByState(TaskState state)
+    public Action<MessageProperties> BuildByState(TaskState state)
     {
         return state switch
         {
@@ -19,53 +19,53 @@ public class DiscordTaskMessageDirector(TaskItem taskItem)
         };
     }
 
-    public MessageProperties BuildNotStarted()
+    public Action<MessageProperties> BuildNotStarted()
     {
-        MessageProperties messageProperties = new();
+        return msg =>
+        {
+            msg.Content = null;
+            msg.Embed = CreateEmbed(Color.LightGrey);
 
-        messageProperties.Embed = CreateEmbed(Color.LightGrey);
-
-        var builder = new ComponentBuilder();
-        AddDeleteButton(builder);
-        builder.WithButton("Start", ButtonIdFactory.TaskRaiseState(_taskItem.Id), ButtonStyle.Secondary);
-        messageProperties.Components = builder.Build();
-
-        return messageProperties;
+            var builder = new ComponentBuilder();
+            builder.WithButton("Start", ButtonIdFactory.TaskRaiseState(_taskItem.Id), ButtonStyle.Secondary);
+            AddDeleteButton(builder);
+            msg.Components = builder.Build();
+        };
     }
-    public MessageProperties BuildInProgress()
+    public Action<MessageProperties> BuildInProgress()
     {
-        MessageProperties messageProperties = new();
+        return msg =>
+        {
+            msg.Content = null;
+            msg.Embed = CreateEmbed(Color.Orange);
 
-        messageProperties.Embed = CreateEmbed(Color.Orange);
-
-        var builder = new ComponentBuilder();
-        AddDeleteButton(builder);
-        builder.WithButton("Complete", ButtonIdFactory.TaskRaiseState(_taskItem.Id), ButtonStyle.Success);
-        messageProperties.Components = builder.Build();
-
-
-        return messageProperties;
+            var builder = new ComponentBuilder();
+            builder.WithButton("Complete", ButtonIdFactory.TaskRaiseState(_taskItem.Id), ButtonStyle.Success);
+            AddDeleteButton(builder);
+            msg.Components = builder.Build();
+        };
     }
-    public MessageProperties BuildCompleted()
+    public Action<MessageProperties> BuildCompleted()
     {
-        MessageProperties messageProperties = new();
+        return msg =>
+        {
+            msg.Content = null;
+            msg.Embed = CreateEmbed(Color.Green);
 
-        messageProperties.Embed = CreateEmbed(Color.Green);
-
-        var builder = new ComponentBuilder();
-        AddDeleteButton(builder);
-        builder.WithButton("Archive", ButtonIdFactory.TaskRaiseState(_taskItem.Id), ButtonStyle.Primary);
-        messageProperties.Components = builder.Build();
-
-        return messageProperties;
+            var builder = new ComponentBuilder();
+            builder.WithButton("Archive", ButtonIdFactory.TaskRaiseState(_taskItem.Id), ButtonStyle.Primary);
+            AddDeleteButton(builder);
+            msg.Components = builder.Build();
+        };
     }
-    public MessageProperties BuildArchived()
+    public Action<MessageProperties> BuildArchived()
     {
-        MessageProperties messageProperties = new();
-
-        messageProperties.Embed = CreateEmbed(Color.Purple);
-
-        return messageProperties;
+        return msg =>
+        {
+            msg.Content = null;
+            msg.Embed = CreateEmbed(Color.Purple);
+            msg.Components = null;
+        };
     }
 
     private void AddDeleteButton(ComponentBuilder builder)
@@ -80,10 +80,9 @@ public class DiscordTaskMessageDirector(TaskItem taskItem)
             .WithDescription($"{_taskItem.Description}")
             .AddField("Assigned To", $"<@{_taskItem.AssigneeID}>", inline: true)  // mention the user
             .AddField("Deadline", DiscordUtility.GetDiscordTimestamp(_taskItem.TaskDuration.UtcDueDate, 'R'), inline: true)  // discord timestamp
-            .AddField("Status", GetNicerStateName(), inline: true)
+            .AddField("State", GetNicerStateName(), inline: true)
+            .AddField("Created on", DiscordUtility.GetDiscordTimestamp(_taskItem.TaskDuration.UtcCreationDate, 'd'))
             .WithColor(color)
-            .WithFooter(footer => footer.Text =
-                $"Created on: {DiscordUtility.GetDiscordTimestamp(_taskItem.TaskDuration.UtcCreationDate, 'd')}")
             .Build();
     }
 

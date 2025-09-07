@@ -16,11 +16,13 @@ public abstract class BaseCommand(IMediator mediator, ILogger logger) : Interact
     {
         try
         {
+            await DeferAsync();
+
             await action();
         }
         catch (DomainException domainException)
         {
-            await RespondOrModify(msg =>
+            await Followup(msg =>
             {
                 msg.Content = domainException.Message;
             });
@@ -29,7 +31,7 @@ public abstract class BaseCommand(IMediator mediator, ILogger logger) : Interact
         {
             _logger.LogError("[INFRASTRUCTURE EXCEPTION]: " + infrastructureException.Message);
 
-            await RespondOrModify(msg =>
+            await Followup(msg =>
             {
                 msg.Content = "A technical error occurred. Please try again later.";
             });
@@ -38,31 +40,23 @@ public abstract class BaseCommand(IMediator mediator, ILogger logger) : Interact
         {
             _logger.LogError("[UNRESOLVED EXCEPTION]: " + exception.Message);
 
-            await RespondOrModify(msg =>
+            await Followup(msg =>
             {
                 msg.Content = "An unexpected error occurred. The administrator has been notified.";
             });
         }
     }
 
-    private async Task RespondOrModify(Action<MessageProperties> configureMessage, bool ephemeral = true)
+    private async Task Followup(Action<MessageProperties> configureMessage, bool ephemeral = true)
     {
         var messageProperties = new MessageProperties();
         configureMessage(messageProperties);
 
-        if (Context.Interaction.HasResponded)
-        {
-            var response = await Context.Interaction.GetOriginalResponseAsync();
-            await response.ModifyAsync(configureMessage);
-        }
-        else
-        {
-            await Context.Interaction.RespondAsync(
-                text: messageProperties.Content.GetValueOrDefault(),
-                embeds: messageProperties.Embeds.GetValueOrDefault(),
-                components: messageProperties.Components.GetValueOrDefault(),
-                allowedMentions: messageProperties.AllowedMentions.GetValueOrDefault(),
-                ephemeral: ephemeral);
-        }
+        await Context.Interaction.FollowupAsync(
+            text: messageProperties.Content.GetValueOrDefault(),
+            embeds: messageProperties.Embeds.GetValueOrDefault(),
+            components: messageProperties.Components.GetValueOrDefault(),
+            allowedMentions: messageProperties.AllowedMentions.GetValueOrDefault(),
+            ephemeral: ephemeral);
     }
 }

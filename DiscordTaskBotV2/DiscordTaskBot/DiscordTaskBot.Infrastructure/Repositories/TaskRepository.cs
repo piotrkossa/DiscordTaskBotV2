@@ -41,7 +41,7 @@ public class TaskRepository : ITaskRepository
 
     public async Task RemoveAsync(TaskItem taskItem)
     {
-        var task = await _dbContext.Tasks.FindAsync(taskItem);
+        var task = await _dbContext.Tasks.FindAsync(taskItem.Id);
         if (task == null)
         {
             throw new InfrastructureException("Task item not found");
@@ -53,7 +53,7 @@ public class TaskRepository : ITaskRepository
 
     public async Task UpdateAsync(TaskItem taskItem)
     {
-        var existingTask = await _dbContext.Tasks.FindAsync(taskItem) ?? throw new InfrastructureException("Task not found for update");
+        var existingTask = await _dbContext.Tasks.FindAsync(taskItem.Id) ?? throw new InfrastructureException("Task not found for update");
         
         _dbContext.Entry(existingTask).CurrentValues.SetValues(taskItem);
         await _dbContext.SaveChangesAsync();

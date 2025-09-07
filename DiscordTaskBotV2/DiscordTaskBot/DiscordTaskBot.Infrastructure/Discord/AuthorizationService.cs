@@ -1,41 +1,45 @@
 namespace DiscordTaskBot.Infrastructure;
 
-using System.Threading.Tasks;
 using DiscordTaskBot.Application;
 using Discord.WebSocket;
+using DiscordTaskBot.Presentation;
+using Microsoft.Extensions.Options;
 
 public class AuthorizationService : IAuthorizationService
 {
-    public DiscordSocketClient _client;
+    private readonly DiscordSocketClient _client;
+    private readonly DiscordBotOptions _botOptions;
 
-    public AuthorizationService(DiscordSocketClient client)
+    public AuthorizationService(DiscordSocketClient client, IOptions<DiscordBotOptions> options)
     {
         _client = client;
+        _botOptions = options.Value;
     }
 
 
-    public async Task<bool> CanCreateTasksAsync(ulong userId)
+    public bool CanCreateTasksAsync(ulong userId)
     {
-        return await IsAdmin(userId);
+        return IsAdmin(userId);
     }
 
-    public async Task<bool> CanDeleteTasksAsync(ulong userId)
+    public bool CanDeleteTasksAsync(ulong userId)
     {
-        return await IsAdmin(userId);
+        return IsAdmin(userId);
     }
 
-    public async Task<bool> CanEditTasksAsync(ulong userId)
+    public bool CanEditTasksAsync(ulong userId)
     {
-        return await IsAdmin(userId);
+        return IsAdmin(userId);
     }
 
-    private async Task<bool> IsAdmin(ulong userId)
+    private bool IsAdmin(ulong userId)
     {
-        SocketGuildUser user = (SocketGuildUser)await _client.GetUserAsync(userId);
-        if (user.GuildPermissions.Administrator)
-        {
-            return true;
-        }
-        return false;
+        var guildId = _botOptions.GuildId;
+
+        var guild = _client.GetGuild(guildId) ?? throw new InfrastructureException($"Guild with Id: {guildId} was not found!");
+
+        var user = guild.GetUser(userId) ?? throw new InfrastructureException($"User with Id: {userId} was not found in guild with Id: {guildId}");
+
+        return user?.GuildPermissions.Administrator ?? false;
     }
 }
