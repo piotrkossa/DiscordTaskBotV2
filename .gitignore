@@ -48,6 +48,8 @@ CodeCoverage/
 .vscode/
 .vs/
 .env
+.json
+out/
 
 # MSBuild Binary and Structured Log
 *.binlog

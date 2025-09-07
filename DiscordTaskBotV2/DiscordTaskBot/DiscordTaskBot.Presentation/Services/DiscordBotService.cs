@@ -13,7 +13,7 @@ public class DiscordBotService
     
 
     private readonly List<IDiscordEventHandler> _eventHandlers;
-    
+
     public DiscordBotService(
         DiscordSocketClient client,
         ILogger<DiscordBotService> logger,
@@ -24,7 +24,7 @@ public class DiscordBotService
         _logger = logger;
         _options = options.Value;
         _eventHandlers = eventHandlers.ToList();
-        
+
         RegisterEventHandlers();
     }
 
