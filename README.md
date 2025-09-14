@@ -28,6 +28,9 @@ A Discord bot for managing tasks on a server – supports statuses and interacti
 }
 ```
 
+## Build Command
+```dotnet publish -c Release -o path```
+
 ## 📝 License
 Open source – feel free to use, modify, and contribute!
 License: MIT
