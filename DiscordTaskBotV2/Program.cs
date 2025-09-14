@@ -77,7 +77,7 @@ internal static class ServiceCollectionExtensions
     {
         var config = new DiscordSocketConfig
         {
-            GatewayIntents = GatewayIntents.Guilds | GatewayIntents.GuildMessages | GatewayIntents.MessageContent,
+            GatewayIntents = GatewayIntents.Guilds | GatewayIntents.GuildMessages | GatewayIntents.MessageContent | GatewayIntents.GuildMembers,
             AlwaysDownloadUsers = true,
             LogGatewayIntentWarnings = false
         };

@@ -59,4 +59,16 @@ public abstract class BaseCommand(IMediator mediator, ILogger logger) : Interact
             allowedMentions: messageProperties.AllowedMentions.GetValueOrDefault(),
             ephemeral: ephemeral);
     }
+
+    protected async Task SendToChannelAsync(IMessageChannel channel, Action<MessageProperties> configureMessage)
+    {
+        var messageProperties = new MessageProperties();
+        configureMessage(messageProperties);
+    
+        await channel.SendMessageAsync(
+            text: messageProperties.Content.GetValueOrDefault(),
+            embed: messageProperties.Embed.GetValueOrDefault(),
+            components: messageProperties.Components.GetValueOrDefault(),
+            allowedMentions: messageProperties.AllowedMentions.GetValueOrDefault());
+    }
 }

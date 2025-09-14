@@ -1,13 +1,19 @@
 namespace DiscordTaskBot.Presentation;
 
+using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
 using DiscordTaskBot.Application;
+using DiscordTaskBot.Infrastructure;
 using MediatR;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
-public class RaiseStateTaskButton(IMediator mediator, ILogger<RaiseStateTaskButton> logger) : BaseCommand(mediator, logger)
+public class RaiseStateTaskButton(IMediator mediator, ILogger<RaiseStateTaskButton> logger, IOptions<DiscordBotOptions> options, DiscordSocketClient client) : BaseCommand(mediator, logger)
 {
+    private readonly DiscordBotOptions _options = options.Value;
+    private readonly DiscordSocketClient _client = client;
+
     [ComponentInteraction(ButtonActions.TaskRaiseState + ":*")]
     public async Task RaiseTaskState(string taskId)
     {
@@ -18,7 +24,20 @@ public class RaiseStateTaskButton(IMediator mediator, ILogger<RaiseStateTaskButt
             var taskItem = await base._mediator.Send(new RaiseTaskStateCommand(result, Context.User.Id));
 
             var component = (SocketMessageComponent)Context.Interaction;
-            await component.Message.ModifyAsync(new DiscordTaskMessageDirector(taskItem).BuildByState(taskItem.State));
+
+            if (taskItem.State != Domain.TaskState.ARCHIVED)
+            {
+                await component.Message.ModifyAsync(new DiscordTaskMessageDirector(taskItem).BuildByState(taskItem.State));
+            }
+            else
+            {
+                await component.Message.DeleteAsync();
+                var archiveChannel = (IMessageChannel)await _client.GetChannelAsync(_options.ArchiveChannelId) ?? throw new InfrastructureException("Archive channel was not found");
+
+                await SendToChannelAsync(archiveChannel, new DiscordTaskMessageDirector(taskItem).BuildArchived());
+            }
+
+            await FollowupAsync("Task updated successfully", ephemeral: true);
         });
     }
 }
