@@ -9,6 +9,7 @@ A Discord bot for managing tasks on a server – supports statuses and interacti
 - Automatic embed coloring
 - Interactive buttons for status control (Start, Complete, Archive, Delete)
 - Deadline countdowns with `<t:...:R>` formatting
+- Archiving tasks to specified channel
 
 ## 🛠️ Requirements
 
