@@ -16,13 +16,11 @@ public abstract class BaseCommand(IMediator mediator, ILogger logger) : Interact
     {
         try
         {
-            await DeferAsync(true);
-            
             await action();
         }
         catch (DomainException domainException)
         {
-            await Followup(msg =>
+            await FollowupOrRespond(msg =>
             {
                 msg.Content = domainException.Message;
             });
@@ -31,7 +29,7 @@ public abstract class BaseCommand(IMediator mediator, ILogger logger) : Interact
         {
             _logger.LogError("[INFRASTRUCTURE EXCEPTION]: " + infrastructureException.Message);
 
-            await Followup(msg =>
+            await FollowupOrRespond(msg =>
             {
                 msg.Content = "A technical error occurred. Please try again later.";
             });
@@ -40,25 +38,38 @@ public abstract class BaseCommand(IMediator mediator, ILogger logger) : Interact
         {
             _logger.LogError("[UNRESOLVED EXCEPTION]: " + exception.Message);
 
-            await Followup(msg =>
+            await FollowupOrRespond(msg =>
             {
                 msg.Content = "An unexpected error occurred. The administrator has been notified.";
             });
         }
     }
 
-    protected async Task Followup(Action<MessageProperties> configureMessage, bool ephemeral = true)
+    protected async Task FollowupOrRespond(Action<MessageProperties> configureMessage, bool ephemeral = true)
     {
         var messageProperties = new MessageProperties();
         configureMessage(messageProperties);
 
-        await Context.Interaction.FollowupAsync(
-            text: messageProperties.Content.GetValueOrDefault(),
-            embeds: messageProperties.Embeds.GetValueOrDefault(),
-            embed: messageProperties.Embed.GetValueOrDefault(),
-            components: messageProperties.Components.GetValueOrDefault(),
-            allowedMentions: messageProperties.AllowedMentions.GetValueOrDefault(),
-            ephemeral: ephemeral);
+        if (Context.Interaction.HasResponded)
+        {
+            await FollowupAsync(
+                text: messageProperties.Content.GetValueOrDefault(),
+                embeds: messageProperties.Embeds.GetValueOrDefault(),
+                embed: messageProperties.Embed.GetValueOrDefault(),
+                components: messageProperties.Components.GetValueOrDefault(),
+                allowedMentions: messageProperties.AllowedMentions.GetValueOrDefault(),
+                ephemeral: ephemeral);
+        }
+        else
+        {
+            await RespondAsync(
+                text: messageProperties.Content.GetValueOrDefault(),
+                embeds: messageProperties.Embeds.GetValueOrDefault(),
+                embed: messageProperties.Embed.GetValueOrDefault(),
+                components: messageProperties.Components.GetValueOrDefault(),
+                allowedMentions: messageProperties.AllowedMentions.GetValueOrDefault(),
+                ephemeral: ephemeral);
+        }
     }
 
     protected async Task SendToChannelAsync(IMessageChannel channel, Action<MessageProperties> configureMessage)
@@ -68,6 +79,7 @@ public abstract class BaseCommand(IMediator mediator, ILogger logger) : Interact
 
         await channel.SendMessageAsync(
             text: messageProperties.Content.GetValueOrDefault(),
+            embeds: messageProperties.Embeds.GetValueOrDefault(),
             embed: messageProperties.Embed.GetValueOrDefault(),
             components: messageProperties.Components.GetValueOrDefault(),
             allowedMentions: messageProperties.AllowedMentions.GetValueOrDefault());

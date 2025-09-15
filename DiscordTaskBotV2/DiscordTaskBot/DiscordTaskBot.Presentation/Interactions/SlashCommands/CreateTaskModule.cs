@@ -6,6 +6,7 @@ using Discord.Interactions;
 using MediatR;
 using DiscordTaskBot.Domain;
 using Microsoft.Extensions.Logging;
+using Discord.WebSocket;
 
 public class CreateTaskModule(IMediator mediator, ILogger<CreateTaskModule> logger) : BaseCommand(mediator, logger)
 {
@@ -21,7 +22,7 @@ public class CreateTaskModule(IMediator mediator, ILogger<CreateTaskModule> logg
 
             var taskItem = await base._mediator.Send(new CreateTaskCommand(description, new TaskDuration(utcNow, utcNow.AddDays(daysToDeadline)), user.Id, Context.User.Id));
 
-            await Followup(new DiscordTaskMessageDirector(taskItem).BuildNotStarted(), false);
+            await FollowupOrRespond(new DiscordTaskMessageDirector(taskItem).BuildNotStarted(), false);
         });
     }
 }

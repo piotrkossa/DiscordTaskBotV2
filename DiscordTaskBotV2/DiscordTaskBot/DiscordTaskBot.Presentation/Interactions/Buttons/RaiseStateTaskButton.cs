@@ -19,6 +19,8 @@ public class RaiseStateTaskButton(IMediator mediator, ILogger<RaiseStateTaskButt
     {
         await base.ExecuteWithHandlingAsync(async () =>
         {
+            await DeferAsync(ephemeral: true);
+
             if (!Guid.TryParse(taskId, out var result)) throw new ArgumentException($"Invalid task Id {taskId}");
 
             var taskItem = await base._mediator.Send(new RaiseTaskStateCommand(result, Context.User.Id));
@@ -32,11 +34,10 @@ public class RaiseStateTaskButton(IMediator mediator, ILogger<RaiseStateTaskButt
             else
             {
                 await component.Message.DeleteAsync();
-                var archiveChannel = (IMessageChannel)await _client.GetChannelAsync(_options.ArchiveChannelId) ?? throw new InfrastructureException("Archive channel was not found");
+                var archiveChannel = ((IMessageChannel)await _client.GetChannelAsync(_options.ArchiveChannelId)) ?? throw new InfrastructureException("Archive channel was not found");
 
                 await SendToChannelAsync(archiveChannel, new DiscordTaskMessageDirector(taskItem).BuildArchived());
             }
-            await FollowupAsync(ephemeral:true);
         });
     }
 }
