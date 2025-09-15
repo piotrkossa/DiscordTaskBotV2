@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using DiscordTaskBot.Presentation;
 using DiscordTaskBot.Infrastructure;
 using System.Reflection;
+using NReco.Logging.File;
 
 namespace DiscordTaskBot;
 
@@ -60,6 +61,7 @@ internal class Program
     private static void ConfigureLogging(ILoggingBuilder logging)
     {
         logging.AddConsole();
+        logging.AddFile("app.log", append:true);
         logging.SetMinimumLevel(LogLevel.Debug);
     }
 }
