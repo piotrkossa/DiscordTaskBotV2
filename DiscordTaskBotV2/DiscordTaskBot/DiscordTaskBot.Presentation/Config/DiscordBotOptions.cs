@@ -9,4 +9,5 @@ public class DiscordBotOptions
     public ulong ArchiveChannelId { get; set; } = 0;
     public bool RegisterCommandsGlobally { get; set; } = false;
     public LogLevel LogLevel { get; set; } = LogLevel.Information;
+    public ulong TaskManagamentRoleId { get; set; } = 0;
 }

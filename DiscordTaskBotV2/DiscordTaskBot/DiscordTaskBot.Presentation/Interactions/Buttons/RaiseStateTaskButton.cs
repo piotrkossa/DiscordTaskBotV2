@@ -36,8 +36,7 @@ public class RaiseStateTaskButton(IMediator mediator, ILogger<RaiseStateTaskButt
 
                 await SendToChannelAsync(archiveChannel, new DiscordTaskMessageDirector(taskItem).BuildArchived());
             }
-
-            await FollowupAsync("Task updated successfully", ephemeral: true);
+            await FollowupAsync(ephemeral:true);
         });
     }
 }

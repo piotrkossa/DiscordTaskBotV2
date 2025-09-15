@@ -16,8 +16,8 @@ public abstract class BaseCommand(IMediator mediator, ILogger logger) : Interact
     {
         try
         {
-            await DeferAsync();
-
+            await DeferAsync(true);
+            
             await action();
         }
         catch (DomainException domainException)
@@ -47,7 +47,7 @@ public abstract class BaseCommand(IMediator mediator, ILogger logger) : Interact
         }
     }
 
-    private async Task Followup(Action<MessageProperties> configureMessage, bool ephemeral = true)
+    protected async Task Followup(Action<MessageProperties> configureMessage, bool ephemeral = true)
     {
         var messageProperties = new MessageProperties();
         configureMessage(messageProperties);
@@ -55,6 +55,7 @@ public abstract class BaseCommand(IMediator mediator, ILogger logger) : Interact
         await Context.Interaction.FollowupAsync(
             text: messageProperties.Content.GetValueOrDefault(),
             embeds: messageProperties.Embeds.GetValueOrDefault(),
+            embed: messageProperties.Embed.GetValueOrDefault(),
             components: messageProperties.Components.GetValueOrDefault(),
             allowedMentions: messageProperties.AllowedMentions.GetValueOrDefault(),
             ephemeral: ephemeral);
@@ -64,7 +65,7 @@ public abstract class BaseCommand(IMediator mediator, ILogger logger) : Interact
     {
         var messageProperties = new MessageProperties();
         configureMessage(messageProperties);
-    
+
         await channel.SendMessageAsync(
             text: messageProperties.Content.GetValueOrDefault(),
             embed: messageProperties.Embed.GetValueOrDefault(),

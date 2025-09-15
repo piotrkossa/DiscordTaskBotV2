@@ -40,6 +40,12 @@ public class AuthorizationService : IAuthorizationService
 
         var user = guild.GetUser(userId) ?? throw new InfrastructureException($"User with Id: {userId} was not found in guild with Id: {guildId}");
 
-        return user?.GuildPermissions.Administrator ?? false;
+        foreach (var role in user.Roles)
+        {
+            if (role.Id == _botOptions.TaskManagamentRoleId)
+                return true;
+        }
+
+        return false;
     }
 }

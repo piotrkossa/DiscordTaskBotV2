@@ -20,7 +20,7 @@ public class DeleteTaskButton(IMediator mediator, ILogger<DeleteTaskButton> logg
             var component = (SocketMessageComponent)Context.Interaction;
             await component.Message.DeleteAsync();
 
-            await FollowupAsync("Task deleted successfully", ephemeral: true);
+            await FollowupAsync(ephemeral:true);
         });
     }
 }
