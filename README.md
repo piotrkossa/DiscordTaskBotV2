@@ -23,7 +23,8 @@ A Discord bot for managing tasks on a server – supports statuses and interacti
     "GuildId": YOUR_GUILD,
     "ArchiveChannelId": ARCHIVE_CHANNEL,
     "RegisterCommandsGlobally": true or false,
-    "LogLevel": int
+    "LogLevel": int,
+    "TaskManagamentRoleId": ROLE
   }
 }
 ```
