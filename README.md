@@ -11,6 +11,9 @@ A Discord bot for managing tasks on a server – supports statuses and interacti
 - Deadline countdowns with `<t:...:R>` formatting
 - Archiving tasks to specified channel
 
+## </> Commands
+```/createtask {description} {user} {days to deadline}```
+
 ## 🛠️ Requirements
 
 - [.NET 8 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/8.0)
