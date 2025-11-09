@@ -23,7 +23,7 @@ public class DiscordTaskMessageDirector(TaskItem taskItem)
     {
         return msg =>
         {
-            msg.Content = null;
+            msg.Content = $"<@{_taskItem.AssigneeID}>";
             msg.Embed = CreateEmbed(Color.LightGrey);
 
             var builder = new ComponentBuilder();
