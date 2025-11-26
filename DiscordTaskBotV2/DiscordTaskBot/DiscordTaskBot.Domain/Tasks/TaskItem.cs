@@ -43,9 +43,4 @@ public class TaskItem : Entity
     {
         ChangeState(State + 1);
     }
-
-    public void ChangeDuration(TaskDuration newDuration)
-    {
-        TaskDuration = newDuration;
-    }
 }

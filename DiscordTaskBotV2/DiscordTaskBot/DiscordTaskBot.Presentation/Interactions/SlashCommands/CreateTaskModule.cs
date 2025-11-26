@@ -36,24 +36,22 @@ public class CreateTaskModule(IMediator mediator, ILogger<CreateTaskModule> logg
 
     private async Task NewTaskNotification(ulong userId, TaskItem taskItem)
     {
-        var guildId = _botOptions.GuildId;
-
-        var guild = _client.GetGuild(guildId) ?? throw new InfrastructureException($"Guild with Id: {guildId} was not found!");
-
-        var user = guild.GetUser(userId) ?? throw new InfrastructureException($"User with Id: {userId} was not found in guild with Id: {guildId}");
-
-        try
+        await base.ExecuteWithHandlingAsync(async () =>
         {
+            var guildId = _botOptions.GuildId;
+
+            var guild = _client.GetGuild(guildId) ?? throw new InfrastructureException($"Guild with Id: {guildId} was not found!");
+
+            var user = guild.GetUser(userId) ?? throw new InfrastructureException($"User with Id: {userId} was not found in guild with Id: {guildId}");
+
+
             await user.SendMessageAsync(
                 "🎯 **New Task Alert!**\n\n" +
                 $"**{taskItem.Description}**\n\n" +
                 $"📅 Due: {GetDiscordDueDateString(taskItem.TaskDuration.UtcDueDate)}\n" +
                 "📍 Check the tasks channel for complete information.");
-        }
-        catch (Discord.Net.HttpException ex)
-        {
-            logger.LogWarning("Problem when sending DM: " + ex.Message);
-        }
+
+        });
     }
     
     private string GetDiscordDueDateString(DateTime utcDueDate)

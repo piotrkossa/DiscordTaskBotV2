@@ -24,10 +24,12 @@ public class AddTaskModule(IMediator mediator, ILogger<AddTaskModule> logger, IO
     {
         await base.ExecuteWithHandlingAsync(async () =>
         {
+            await DeferAsync(ephemeral: true);
+
             var tasks = await _repo.GetAllAsync();
 
             var menuBuilder = new SelectMenuBuilder()
-                .WithCustomId($"admin-addtime-select:{days}")
+                .WithCustomId($"admin-addtime-select:{days}:{Context.Interaction.Id}")
                 .WithPlaceholder("Pick task to add time...");
 
             foreach (var task in tasks)
@@ -49,17 +51,33 @@ public class AddTaskModule(IMediator mediator, ILogger<AddTaskModule> logger, IO
 
     }
 
-    [ComponentInteraction("admin-addtime-select:*")]
-    public async Task HandleAdminTimeAddSelection(string daysString, string[] selectedTaskIds)
+    [ComponentInteraction("admin-addtime-select:*:*")]
+    public async Task HandleAdminTimeAddSelection(string daysString, string location, string[] selectedTaskIds)
     {
-        await DeferAsync(ephemeral: true);
+        await base.ExecuteWithHandlingAsync(async () =>
+        {
+            await DeferAsync(ephemeral: true);
 
-        var taskId = Guid.Parse(selectedTaskIds[0]);
-        var daysToAdd = int.Parse(daysString);
+            var taskId = Guid.Parse(selectedTaskIds[0]);
 
-        await mediator.Send(new AddTimeCommand(taskId, daysToAdd, Context.User.Id));
+            var daysToAdd = int.Parse(daysString);
+            var messageId = ulong.Parse(location);
 
-        await FollowupAsync("Time added", ephemeral: true);
+            var task = await mediator.Send(new AddTimeCommand(taskId, daysToAdd, Context.User.Id));
+
+            var component = Context.Interaction as SocketMessageComponent;
+
+            if (component != null)
+            {
+                await component.Message.ModifyAsync(new DiscordTaskMessageDirector(task).BuildByState(task.State));
+            }
+            else
+            {
+                throw new InfrastructureException("Could not get message component from interaction");
+            }
+
+            await FollowupAsync("Time added", ephemeral: true);
+        });
     }
 
 }

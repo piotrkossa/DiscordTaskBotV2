@@ -25,9 +25,9 @@ public class AddTimeCommandHandler : IRequestHandler<AddTimeCommand, TaskItem>
         if (task == null)
             throw new DomainException("Task not found");
         
-        task.ChangeDuration(task.TaskDuration.ExtendByDays(request.Days));
+        task.TaskDuration.ExtendByDays(request.Days);
         
-        await _taskRepository.AddAsync(task);
+        await _taskRepository.UpdateAsync(task);
 
         return task;
     }
