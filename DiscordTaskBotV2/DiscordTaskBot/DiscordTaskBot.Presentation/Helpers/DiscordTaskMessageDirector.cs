@@ -28,7 +28,7 @@ public class DiscordTaskMessageDirector(TaskItem taskItem)
 
             var builder = new ComponentBuilder();
             builder.WithButton("Start", ButtonIdFactory.TaskRaiseState(_taskItem.Id), ButtonStyle.Secondary);
-            AddDeleteButton(builder);
+            AddOptionsButton(builder);
             msg.Components = builder.Build();
         };
     }
@@ -41,7 +41,7 @@ public class DiscordTaskMessageDirector(TaskItem taskItem)
 
             var builder = new ComponentBuilder();
             builder.WithButton("Complete", ButtonIdFactory.TaskRaiseState(_taskItem.Id), ButtonStyle.Success);
-            AddDeleteButton(builder);
+            AddOptionsButton(builder);
             msg.Components = builder.Build();
         };
     }
@@ -54,7 +54,7 @@ public class DiscordTaskMessageDirector(TaskItem taskItem)
 
             var builder = new ComponentBuilder();
             builder.WithButton("Archive", ButtonIdFactory.TaskRaiseState(_taskItem.Id), ButtonStyle.Primary);
-            AddDeleteButton(builder);
+            AddOptionsButton(builder);
             msg.Components = builder.Build();
         };
     }
@@ -68,9 +68,9 @@ public class DiscordTaskMessageDirector(TaskItem taskItem)
         };
     }
 
-    private void AddDeleteButton(ComponentBuilder builder)
+    private void AddOptionsButton(ComponentBuilder builder)
     {
-        builder.WithButton("Delete", ButtonIdFactory.TaskDelete(_taskItem.Id), ButtonStyle.Danger);
+        builder.WithButton("Options", ButtonIdFactory.TaskOptions(_taskItem.Id), ButtonStyle.Secondary);
     }
 
     private Embed CreateEmbed(Color color)

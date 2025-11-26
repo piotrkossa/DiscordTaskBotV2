@@ -2,7 +2,7 @@ namespace DiscordTaskBot.Presentation;
 
 public static class ButtonActions
 {
-    public const string TaskDelete = "button_taskdelete";
+    public const string TaskOptions = "button_taskoptions";
     public const string TaskRaiseState = "button_taskraisestate";
 }
 
@@ -15,6 +15,6 @@ public static class ButtonIdFactory
     public static string TaskRaiseState(Guid taskId)
         => $"{ButtonActions.TaskRaiseState}{Separator}{taskId}";
 
-    public static string TaskDelete(Guid taskId)
-        => $"{ButtonActions.TaskDelete}{Separator}{taskId}";
+    public static string TaskOptions(Guid taskId)
+        => $"{ButtonActions.TaskOptions}{Separator}{taskId}";
 }
