@@ -1,6 +1,7 @@
 # Discord Task Bot 📝
 
 A Discord bot for managing tasks on a server – supports statuses and interactive buttons. It reads from `.json`, and allows editing tasks directly via embeds.
+I created this bot to grasp some knowledge about **Clean Architecture** in dotnet framework.
 
 ## ✨ Features
 
