@@ -20,6 +20,12 @@ public class OnReadyHandler(
 
     private readonly ILogger<OnReadyHandler> _logger = logger;
 
+    // Ready fires again after every reconnect; these keep the work from repeating
+    // while still retrying registration if a previous attempt failed.
+    private readonly SemaphoreSlim _lock = new(1, 1);
+    private bool _modulesLoaded;
+    private bool _commandsRegistered;
+
 
     public void Initialize()
     {
@@ -29,24 +35,29 @@ public class OnReadyHandler(
 
     public async Task OnReady()
     {
-        _logger.LogInformation("Bot connected as {Username}#{Discriminator}", 
-            _client.CurrentUser.Username, 
+        _logger.LogInformation("Bot connected as {Username}#{Discriminator}",
+            _client.CurrentUser.Username,
             _client.CurrentUser.Discriminator);
-        
+
         await RegisterSlashCommandsAsync();
     }
 
     private async Task RegisterSlashCommandsAsync()
     {
+        await _lock.WaitAsync();
         try
         {
-            if (_interactionService.SlashCommands.Any())
+            if (!_modulesLoaded)
             {
-                _logger.LogInformation("Slash commands already loaded - skipping registration");
-                return;
+                await _interactionService.AddModulesAsync(Assembly.GetExecutingAssembly(), _services);
+                _modulesLoaded = true;
             }
 
-            await _interactionService.AddModulesAsync(Assembly.GetExecutingAssembly(), _services);
+            if (_commandsRegistered)
+            {
+                _logger.LogInformation("Slash commands already registered - skipping registration");
+                return;
+            }
 
             if (_options.RegisterCommandsGlobally)
             {
@@ -58,11 +69,17 @@ public class OnReadyHandler(
                 await _interactionService.RegisterCommandsToGuildAsync(_options.GuildId, true);
                 _logger.LogInformation("Slash commands registered for guild {GuildId}", _options.GuildId);
             }
+
+            _commandsRegistered = true;
         }
         catch (Exception ex)
         {
+            // Will be retried on the next Ready event.
             _logger.LogError(ex, "Failed to register slash commands");
-            throw;
+        }
+        finally
+        {
+            _lock.Release();
         }
     }
 }

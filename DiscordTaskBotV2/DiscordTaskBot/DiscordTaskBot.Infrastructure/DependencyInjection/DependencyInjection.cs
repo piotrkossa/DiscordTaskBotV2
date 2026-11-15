@@ -8,8 +8,7 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddInfrastructure(this IServiceCollection services)
     {
-
-        services.AddDbContext<TaskItemDbContext>(options =>
+        services.AddDbContextFactory<TaskItemDbContext>(options =>
         {
             options.UseSqlite("Data Source=taskitems.db");
 

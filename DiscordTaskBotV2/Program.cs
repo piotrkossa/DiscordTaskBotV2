@@ -53,7 +53,9 @@ internal class Program
             Console.WriteLine("⚠️ appsettings.json was not found, so default was generated.");
         }
 
+        // Load from the same directory the file was checked/generated in, not the current working directory.
         return new ConfigurationBuilder()
+                .SetBasePath(AppContext.BaseDirectory)
                 .AddJsonFile("appsettings.json", optional: false, reloadOnChange: false)
                 .Build();
     }

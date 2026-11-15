@@ -33,10 +33,13 @@ public class RaiseStateTaskButton(IMediator mediator, ILogger<RaiseStateTaskButt
             }
             else
             {
-                await component.Message.DeleteAsync();
-                var archiveChannel = ((IMessageChannel)await _client.GetChannelAsync(_options.ArchiveChannelId)) ?? throw new InfrastructureException("Archive channel was not found");
+                // Post to the archive first and only then remove the original message,
+                // so a missing archive channel never makes the task vanish from Discord.
+                var archiveChannel = await _client.GetChannelAsync(_options.ArchiveChannelId) as IMessageChannel
+                    ?? throw new InfrastructureException($"Archive channel {_options.ArchiveChannelId} was not found or is not a text channel");
 
                 await SendToChannelAsync(archiveChannel, new DiscordTaskMessageDirector(taskItem).BuildArchived());
+                await component.Message.DeleteAsync();
             }
         });
     }

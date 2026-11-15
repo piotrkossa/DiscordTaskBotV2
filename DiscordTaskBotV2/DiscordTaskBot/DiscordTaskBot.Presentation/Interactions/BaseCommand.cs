@@ -2,6 +2,7 @@ namespace DiscordTaskBot.Presentation;
 
 using Discord;
 using Discord.Interactions;
+using Discord.Net;
 using DiscordTaskBot.Domain;
 using DiscordTaskBot.Infrastructure;
 using MediatR;
@@ -20,28 +21,31 @@ public abstract class BaseCommand(IMediator mediator, ILogger logger) : Interact
         }
         catch (DomainException domainException)
         {
-            await FollowupOrRespond(msg =>
-            {
-                msg.Content = domainException.Message;
-            });
+            await TryNotifyUserAsync(domainException.Message);
         }
         catch (InfrastructureException infrastructureException)
         {
-            _logger.LogError("[INFRASTRUCTURE EXCEPTION]: " + infrastructureException.Message);
-
-            await FollowupOrRespond(msg =>
-            {
-                msg.Content = "A technical error occurred. Please try again later.";
-            });
+            _logger.LogError(infrastructureException, "[INFRASTRUCTURE EXCEPTION]: {Message}", infrastructureException.Message);
+            await TryNotifyUserAsync("A technical error occurred. Please try again later.");
         }
         catch (Exception exception)
         {
-            _logger.LogError("[UNRESOLVED EXCEPTION]: " + exception.Message);
+            _logger.LogError(exception, "[UNRESOLVED EXCEPTION]: {Message}", exception.Message);
+            await TryNotifyUserAsync("An unexpected error occurred. The administrator has been notified.");
+        }
+    }
 
-            await FollowupOrRespond(msg =>
-            {
-                msg.Content = "An unexpected error occurred. The administrator has been notified.";
-            });
+    // Sending the error message can fail too (expired interaction, network error),
+    // and that must not escape the handler.
+    private async Task TryNotifyUserAsync(string content)
+    {
+        try
+        {
+            await FollowupOrRespond(msg => msg.Content = content);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to send error message to user {UserId}", Context.User.Id);
         }
     }
 
@@ -84,4 +88,7 @@ public abstract class BaseCommand(IMediator mediator, ILogger logger) : Interact
             components: messageProperties.Components.GetValueOrDefault(),
             allowedMentions: messageProperties.AllowedMentions.GetValueOrDefault());
     }
+
+    protected static bool IsNotFound(HttpException ex)
+        => ex.HttpCode == System.Net.HttpStatusCode.NotFound;
 }

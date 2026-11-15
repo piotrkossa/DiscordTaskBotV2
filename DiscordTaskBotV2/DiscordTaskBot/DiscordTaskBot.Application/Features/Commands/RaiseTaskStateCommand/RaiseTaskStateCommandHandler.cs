@@ -18,7 +18,8 @@ public class RaiseTaskStateCommandHandler : IRequestHandler<RaiseTaskStateComman
     {
         var taskItem = await _taskRepository.GetByIdAsync(request.TaskId) ?? throw new DomainException("Task could not be found");
 
-        if (!_authorizationService.CanEditTasksAsync(request.RequesterID) && taskItem.AssigneeID != request.RequesterID)
+        // Check the assignee first so the assignee never depends on the guild-member lookup.
+        if (taskItem.AssigneeID != request.RequesterID && !_authorizationService.CanEditTasksAsync(request.RequesterID))
             throw new DomainException("You do not have permission to update this task");
 
         taskItem.RaiseState();

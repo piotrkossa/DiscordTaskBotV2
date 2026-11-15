@@ -2,6 +2,7 @@ namespace DiscordTaskBot.Presentation;
 
 using Discord;
 using Discord.Interactions;
+using Discord.Net;
 using Discord.WebSocket;
 using DiscordTaskBot.Application;
 using MediatR;
@@ -15,71 +16,93 @@ public static class AdminTaskOptions
 }
 
 
-public class AdminOptionsButton(IMediator mediator, ILogger<AdminOptionsButton> logger) : BaseCommand(mediator, logger)
+public class AdminOptionsButton(IMediator mediator, ILogger<AdminOptionsButton> logger, DiscordSocketClient client) : BaseCommand(mediator, logger)
 {
+    private const string ActionSelectId = "task-action-select";
+
+    private readonly DiscordSocketClient _client = client;
+
     [ComponentInteraction(ButtonActions.TaskOptions + ":*")]
     public async Task ShowOptionsMenu(string taskId)
     {
         await base.ExecuteWithHandlingAsync(async () =>
         {
-            var message = Context.Interaction as SocketMessageComponent 
+            var message = Context.Interaction as SocketMessageComponent
                 ?? throw new ArgumentException("Could not find message component from context");
 
             var messageId = message.Message.Id;
             var channelId = message.Channel.Id;
 
-            
             var menuBuilder = new SelectMenuBuilder()
                 // task-action-select:taskId:messageId:channelId
-                .WithCustomId($"task-action-select:{taskId}:{messageId}:{channelId}")
+                .WithCustomId($"{ActionSelectId}:{taskId}:{messageId}:{channelId}")
                 .WithPlaceholder("Choose Action...");
 
-                menuBuilder.AddOption("Add Time", $"{AdminTaskOptions.AddTime}", "Open window to add time.");
-                menuBuilder.AddOption("Delete Task", $"{AdminTaskOptions.Delete}", "Deletes task forever.");
+            menuBuilder.AddOption("Add Time", AdminTaskOptions.AddTime, "Open window to add time.");
+            menuBuilder.AddOption("Delete Task", AdminTaskOptions.Delete, "Deletes task forever.");
 
             var component = new ComponentBuilder().WithSelectMenu(menuBuilder).Build();
 
-            await FollowupAsync("Choose Action:", components: component, ephemeral: true);
+            // Nothing has responded to this interaction yet, so this has to be the initial response
+            // (FollowupAsync without a prior response always failed here).
+            await RespondAsync("Choose Action:", components: component, ephemeral: true);
         });
     }
 
-    [ComponentInteraction("task-action-select:*")] 
+    // One wildcard per custom id segment: taskId, messageId, channelId.
+    [ComponentInteraction(ActionSelectId + ":*:*:*")]
     public async Task HandleActionSelect(string taskId, string messageId, string channelId, string[] values)
     {
         await base.ExecuteWithHandlingAsync(async () =>
         {
-            var action = values.First();
-
-            
+            var action = values.FirstOrDefault();
 
             switch (action)
             {
                 case AdminTaskOptions.AddTime:
-                    await FollowupAsync($"You selected to add time to task {taskId}.", ephemeral: true);
+                    await RespondAsync($"You selected to add time to task {taskId}.", ephemeral: true);
                     break;
 
                 case AdminTaskOptions.Delete:
-                    await DeleteTask(taskId);
+                    await DeleteTask(taskId, messageId, channelId);
                     break;
 
                 default:
-                    await FollowupAsync("Unknown action selected.", ephemeral: true);
+                    await RespondAsync("Unknown action selected.", ephemeral: true);
                     break;
             }
         });
     }
 
-    public async Task DeleteTask(string taskId)
+    private async Task DeleteTask(string taskId, string messageId, string channelId)
     {
-        await base.ExecuteWithHandlingAsync(async () =>
+        await DeferAsync(ephemeral: true);
+
+        if (!Guid.TryParse(taskId, out var taskGuid)) throw new ArgumentException($"Invalid task Id {taskId}");
+        if (!ulong.TryParse(messageId, out var taskMessageId)) throw new ArgumentException($"Invalid message Id {messageId}");
+        if (!ulong.TryParse(channelId, out var taskChannelId)) throw new ArgumentException($"Invalid channel Id {channelId}");
+
+        await base._mediator.Send(new DeleteTaskCommand(taskGuid, Context.User.Id));
+
+        // Delete the task message in the channel - not the ephemeral menu this interaction came from.
+        if (await _client.GetChannelAsync(taskChannelId) is IMessageChannel channel)
         {
-            await DeferAsync(ephemeral: true);
-            if (!Guid.TryParse(taskId, out var result)) throw new ArgumentException($"Invalid task Id {taskId}");
+            try
+            {
+                await channel.DeleteMessageAsync(taskMessageId);
+            }
+            catch (HttpException ex) when (IsNotFound(ex))
+            {
+                // Message was already removed - nothing to do.
+            }
+        }
+        else
+        {
+            _logger.LogWarning("Channel {ChannelId} of deleted task {TaskId} was not found", taskChannelId, taskGuid);
+        }
 
-            await base._mediator.Send(new DeleteTaskCommand(result, Context.User.Id));
-
-            var component = (SocketMessageComponent)Context.Interaction;
-            await component.Message.DeleteAsync();
-        });
+        // Remove the ephemeral "Choose Action" menu as well - it points to a task that no longer exists.
+        // (Ephemeral messages can only be deleted through the interaction, not through the channel.)
+        await DeleteOriginalResponseAsync();
     }
 }

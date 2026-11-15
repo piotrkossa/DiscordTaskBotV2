@@ -1,16 +1,17 @@
 namespace DiscordTaskBot.Infrastructure;
 
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using DiscordTaskBot.Domain;
 
-public class TaskItemDbContext(DbContextOptions options) : DbContext(options)
+public class TaskItemDbContext(DbContextOptions<TaskItemDbContext> options) : DbContext(options)
 {
     public DbSet<TaskItem> Tasks { get; set; }
 
-    protected override void OnConfiguring(DbContextOptionsBuilder options)
-    {
-        options.EnableSensitiveDataLogging();
-    }
+    // SQLite does not store DateTimeKind, so mark every value read back as UTC.
+    private static readonly ValueConverter<DateTime, DateTime> UtcConverter = new(
+        v => v.Kind == DateTimeKind.Local ? v.ToUniversalTime() : v,
+        v => DateTime.SpecifyKind(v, DateTimeKind.Utc));
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -29,9 +30,11 @@ public class TaskItemDbContext(DbContextOptions options) : DbContext(options)
 
             entity.OwnsOne(e => e.TaskDuration, duration =>
             {
-                duration.Property(d => d.UtcCreationDate);
+                duration.Property(d => d.UtcCreationDate)
+                    .HasConversion(UtcConverter);
 
-                duration.Property(d => d.UtcDueDate);
+                duration.Property(d => d.UtcDueDate)
+                    .HasConversion(UtcConverter);
             });
 
             entity.HasIndex(e => e.AssigneeID);

@@ -1,5 +1,6 @@
 namespace DiscordTaskBot.Presentation;
 
+using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
 using Microsoft.Extensions.Logging;
@@ -18,6 +19,11 @@ public class InteractionCreatedHandler(
     public void Initialize()
     {
         _client.InteractionCreated += OnInteractionCreated;
+
+        // Commands run in RunMode.Async (the default), so ExecuteCommandAsync returns before they finish.
+        // Failures such as unknown commands, failed preconditions (e.g. RequireUserPermission) or bad arguments
+        // are only reported through this event, so this is the single place that answers them.
+        _interactionService.InteractionExecuted += OnInteractionExecuted;
     }
 
     private async Task OnInteractionCreated(SocketInteraction interaction)
@@ -25,22 +31,26 @@ public class InteractionCreatedHandler(
         try
         {
             var context = new SocketInteractionContext(_client, interaction);
-            var result = await _interactionService.ExecuteCommandAsync(context, _services);
-
-            if (!result.IsSuccess)
-            {
-                _logger.LogWarning("Interaction execution failed: {Error}", result.ErrorReason);
-
-                await HandleInteractionError(interaction, result);
-            }
+            await _interactionService.ExecuteCommandAsync(context, _services);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error handling interaction {InteractionId}", interaction.Id);
         }
     }
-    
-    private async Task HandleInteractionError(SocketInteraction interaction, IResult result)
+
+    private async Task OnInteractionExecuted(ICommandInfo command, IInteractionContext context, IResult result)
+    {
+        if (result.IsSuccess)
+            return;
+
+        _logger.LogWarning("Interaction execution failed ({Command}): {Error} - {Reason}",
+            command?.Name ?? "unknown", result.Error, result.ErrorReason);
+
+        await HandleInteractionError(context.Interaction, result);
+    }
+
+    private async Task HandleInteractionError(IDiscordInteraction interaction, IResult result)
     {
         try
         {
