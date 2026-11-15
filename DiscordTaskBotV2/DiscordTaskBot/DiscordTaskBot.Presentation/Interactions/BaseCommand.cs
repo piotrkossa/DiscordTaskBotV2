@@ -89,6 +89,20 @@ public abstract class BaseCommand(IMediator mediator, ILogger logger) : Interact
             allowedMentions: messageProperties.AllowedMentions.GetValueOrDefault());
     }
 
+    // For follow-up information after the main action already succeeded - a failure here must not
+    // turn a successful command into an error message.
+    protected async Task TryFollowupEphemeralAsync(string text)
+    {
+        try
+        {
+            await FollowupAsync(text, allowedMentions: AllowedMentions.None, ephemeral: true);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to send follow-up to user {UserId}", Context.User.Id);
+        }
+    }
+
     protected static bool IsNotFound(HttpException ex)
         => ex.HttpCode == System.Net.HttpStatusCode.NotFound;
 }

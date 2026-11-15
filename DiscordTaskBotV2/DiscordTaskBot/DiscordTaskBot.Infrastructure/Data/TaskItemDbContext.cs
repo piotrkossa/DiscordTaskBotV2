@@ -1,6 +1,7 @@
 namespace DiscordTaskBot.Infrastructure;
 
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using DiscordTaskBot.Domain;
 
@@ -13,6 +14,16 @@ public class TaskItemDbContext(DbContextOptions<TaskItemDbContext> options) : Db
         v => v.Kind == DateTimeKind.Local ? v.ToUniversalTime() : v,
         v => DateTime.SpecifyKind(v, DateTimeKind.Utc));
 
+    // Assignees are stored as "id1,id2,id3" in a single column.
+    private static readonly ValueConverter<IReadOnlyList<ulong>, string> AssigneesConverter = new(
+        v => string.Join(',', v),
+        v => v.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(ulong.Parse).ToArray());
+
+    private static readonly ValueComparer<IReadOnlyList<ulong>> AssigneesComparer = new(
+        (a, b) => a!.SequenceEqual(b!),
+        v => v.Aggregate(0, (hash, id) => HashCode.Combine(hash, id.GetHashCode())),
+        v => v.ToArray());
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<TaskItem>(entity =>
@@ -23,7 +34,14 @@ public class TaskItemDbContext(DbContextOptions<TaskItemDbContext> options) : Db
 
             entity.Property(e => e.Description);
 
-            entity.Property(e => e.AssigneeID);
+            entity.Property(e => e.AssigneeIDs)
+                .HasConversion(AssigneesConverter, AssigneesComparer);
+
+            entity.Property(e => e.ChannelId);
+            entity.Property(e => e.MessageId);
+
+            entity.Property(e => e.DueSoonReminderSent);
+            entity.Property(e => e.OverdueReminderSent);
 
             entity.Property(e => e.State)
                 .HasConversion<string>();
@@ -37,7 +55,6 @@ public class TaskItemDbContext(DbContextOptions<TaskItemDbContext> options) : Db
                     .HasConversion(UtcConverter);
             });
 
-            entity.HasIndex(e => e.AssigneeID);
             entity.HasIndex(e => e.State);
         });
 

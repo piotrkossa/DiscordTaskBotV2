@@ -23,7 +23,7 @@ public class DiscordTaskMessageDirector(TaskItem taskItem)
     {
         return msg =>
         {
-            msg.Content = $"<@{_taskItem.AssigneeID}>";
+            msg.Content = string.Join(" ", _taskItem.AssigneeIDs.Select(id => $"<@{id}>"));
             msg.Embed = CreateEmbed(Color.LightGrey);
 
             var builder = new ComponentBuilder();
@@ -78,7 +78,7 @@ public class DiscordTaskMessageDirector(TaskItem taskItem)
         return new EmbedBuilder()
             .WithTitle("Task")
             .WithDescription($"{_taskItem.Description}")
-            .AddField("Assigned To", $"<@{_taskItem.AssigneeID}>", inline: true)  // mention the user
+            .AddField("Assigned To", string.Join(", ", _taskItem.AssigneeIDs.Select(id => $"<@{id}>")), inline: true)  // mention the users
             .AddField("Deadline", DiscordUtility.GetDiscordTimestamp(_taskItem.TaskDuration.UtcDueDate, 'R'), inline: true)  // discord timestamp
             .AddField("State", GetNicerStateName(), inline: true)
             .AddField("Created on", DiscordUtility.GetDiscordTimestamp(_taskItem.TaskDuration.UtcCreationDate, 'd'))

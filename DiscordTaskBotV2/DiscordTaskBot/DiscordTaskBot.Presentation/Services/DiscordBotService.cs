@@ -90,6 +90,15 @@ public class DiscordBotService
         if (_options.ArchiveChannelId == 0)
             errors.Add("Archive Channel ID is not specified or invalid");
 
+        if (_options.ReminderStartHour is < 0 or > 23)
+            errors.Add("ReminderStartHour must be between 0 and 23");
+
+        if (_options.ReminderEndHour is < 1 or > 24)
+            errors.Add("ReminderEndHour must be between 1 and 24");
+
+        if (_options.ReminderStartHour >= _options.ReminderEndHour)
+            errors.Add("ReminderStartHour must be earlier than ReminderEndHour");
+
         if (errors.Any())
         {
             var errorMessage = string.Join(Environment.NewLine, errors);

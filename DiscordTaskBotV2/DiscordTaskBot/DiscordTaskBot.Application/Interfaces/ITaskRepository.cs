@@ -17,4 +17,8 @@ public interface ITaskRepository
 
     // returns all tasks
     Task<IEnumerable<TaskItem>> GetAllAsync();
+
+    // Targeted single-column updates, so they never overwrite changes made concurrently by other operations.
+    Task SetMessageLocationAsync(Guid taskId, ulong channelId, ulong messageId);
+    Task MarkReminderSentAsync(Guid taskId, ReminderKind kind);
 }

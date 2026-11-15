@@ -57,6 +57,30 @@ public class TaskRepository : ITaskRepository
         await dbContext.SaveChangesAsync();
     }
 
+    public async Task SetMessageLocationAsync(Guid taskId, ulong channelId, ulong messageId)
+    {
+        await using var dbContext = await _contextFactory.CreateDbContextAsync();
+        await dbContext.Tasks
+            .Where(t => t.Id == taskId)
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(t => t.ChannelId, channelId)
+                .SetProperty(t => t.MessageId, messageId));
+    }
+
+    public async Task MarkReminderSentAsync(Guid taskId, ReminderKind kind)
+    {
+        await using var dbContext = await _contextFactory.CreateDbContextAsync();
+        var query = dbContext.Tasks.Where(t => t.Id == taskId);
+
+        // Same rules as TaskItem.MarkReminderSent.
+        if (kind == ReminderKind.Overdue)
+            await query.ExecuteUpdateAsync(s => s
+                .SetProperty(t => t.DueSoonReminderSent, true)
+                .SetProperty(t => t.OverdueReminderSent, true));
+        else
+            await query.ExecuteUpdateAsync(s => s.SetProperty(t => t.DueSoonReminderSent, true));
+    }
+
     public async Task UpdateAsync(TaskItem taskItem)
     {
         await using var dbContext = await _contextFactory.CreateDbContextAsync();
