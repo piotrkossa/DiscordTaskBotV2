@@ -42,26 +42,81 @@ public class TaskItem : Entity
 
     public bool IsAssignee(ulong userId) => AssigneeIDs.Contains(userId);
 
-    public void ChangeState(TaskState newState)
+    // Per-assignee progress. The task state follows from it:
+    // nobody started -> NOT_STARTED, at least one started -> IN_PROGRESS, everyone completed -> COMPLETED.
+    public IReadOnlyList<ulong> StartedAssigneeIDs { get; private set; } = [];
+    public IReadOnlyList<ulong> CompletedAssigneeIDs { get; private set; } = [];
+
+    public AssigneeProgress GetProgress(ulong userId)
+        => CompletedAssigneeIDs.Contains(userId) ? AssigneeProgress.Completed
+         : StartedAssigneeIDs.Contains(userId) ? AssigneeProgress.InProgress
+         : AssigneeProgress.NotStarted;
+
+    // Assignees who have not completed the task yet (they still get reminders).
+    public IReadOnlyList<ulong> PendingAssigneeIDs => AssigneeIDs.Where(id => !CompletedAssigneeIDs.Contains(id)).ToArray();
+
+    public bool AnyoneNotStarted => AssigneeIDs.Any(id => !StartedAssigneeIDs.Contains(id));
+
+    public void StartWork(ulong userId)
     {
-        var isValidTransition = (State, newState) switch
-        {
-            (TaskState.NOT_STARTED, TaskState.IN_PROGRESS) => true,
-            (TaskState.IN_PROGRESS, TaskState.COMPLETED) => true,
-            (TaskState.COMPLETED, TaskState.ARCHIVED) => true,
-            _ => false
-        };
+        EnsureCanChangeProgress(userId);
 
-        if (!isValidTransition)
-            throw new DomainException($"Cannot change state from {State} to {newState}");
+        if (CompletedAssigneeIDs.Contains(userId))
+            throw new DomainException("You have already completed this task.");
+        if (StartedAssigneeIDs.Contains(userId))
+            throw new DomainException("You have already started this task.");
 
-        State = newState;
+        StartedAssigneeIDs = [.. StartedAssigneeIDs, userId];
+        RecalculateState();
+    }
+
+    // Completing without starting first is allowed - it counts as started too.
+    public void CompleteWork(ulong userId)
+    {
+        EnsureCanChangeProgress(userId);
+
+        if (CompletedAssigneeIDs.Contains(userId))
+            throw new DomainException("You have already completed this task.");
+
+        if (!StartedAssigneeIDs.Contains(userId))
+            StartedAssigneeIDs = [.. StartedAssigneeIDs, userId];
+        CompletedAssigneeIDs = [.. CompletedAssigneeIDs, userId];
+        RecalculateState();
+    }
+
+    public void Archive()
+    {
+        if (State == TaskState.ARCHIVED)
+            throw new DomainException("The task is already archived.");
+        if (State != TaskState.COMPLETED)
+            throw new DomainException("The task can be archived only after all assignees have completed it.");
+
+        State = TaskState.ARCHIVED;
         _domainEvents.Add(new TaskStateUpdatedEvent(Id, State));
     }
 
-    public void RaiseState()
+    private void EnsureCanChangeProgress(ulong userId)
     {
-        ChangeState(State + 1);
+        if (State == TaskState.ARCHIVED)
+            throw new DomainException("The task is already archived.");
+        if (!IsAssignee(userId))
+            throw new DomainException("Only people assigned to this task can mark their progress.");
+    }
+
+    private void RecalculateState()
+    {
+        if (State == TaskState.ARCHIVED)
+            return;
+
+        var newState = AssigneeIDs.All(CompletedAssigneeIDs.Contains) ? TaskState.COMPLETED
+            : AssigneeIDs.Any(StartedAssigneeIDs.Contains) ? TaskState.IN_PROGRESS
+            : TaskState.NOT_STARTED;
+
+        if (newState != State)
+        {
+            State = newState;
+            _domainEvents.Add(new TaskStateUpdatedEvent(Id, State));
+        }
     }
 
     public void ChangeDescription(string description)
@@ -72,10 +127,20 @@ public class TaskItem : Entity
     /// <returns>The users that were not assigned before.</returns>
     public IReadOnlyList<ulong> ChangeAssignees(IEnumerable<ulong> assigneeIDs)
     {
+        if (State == TaskState.ARCHIVED)
+            throw new DomainException("Archived tasks cannot be changed");
+
         var newAssignees = ValidateAssignees(assigneeIDs);
         var added = newAssignees.Except(AssigneeIDs).ToArray();
 
         AssigneeIDs = newAssignees;
+
+        // Removed people's progress no longer counts; added people start as "not started",
+        // so e.g. a completed task goes back to in progress when someone new joins.
+        StartedAssigneeIDs = StartedAssigneeIDs.Where(newAssignees.Contains).ToArray();
+        CompletedAssigneeIDs = CompletedAssigneeIDs.Where(newAssignees.Contains).ToArray();
+        RecalculateState();
+
         return added;
     }
 

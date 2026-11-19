@@ -37,6 +37,12 @@ public class TaskItemDbContext(DbContextOptions<TaskItemDbContext> options) : Db
             entity.Property(e => e.AssigneeIDs)
                 .HasConversion(AssigneesConverter, AssigneesComparer);
 
+            entity.Property(e => e.StartedAssigneeIDs)
+                .HasConversion(AssigneesConverter, AssigneesComparer);
+
+            entity.Property(e => e.CompletedAssigneeIDs)
+                .HasConversion(AssigneesConverter, AssigneesComparer);
+
             entity.Property(e => e.ChannelId);
             entity.Property(e => e.MessageId);
 

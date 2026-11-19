@@ -11,11 +11,13 @@ public class AddTimeCommandHandler : IRequestHandler<AddTimeCommand, TaskItem>
 
     private readonly ITaskRepository _taskRepository;
     private readonly IAuthorizationService _authorizationService;
+    private readonly TaskLocks _locks;
 
-    public AddTimeCommandHandler(ITaskRepository taskRepository, IAuthorizationService authorizationService)
+    public AddTimeCommandHandler(ITaskRepository taskRepository, IAuthorizationService authorizationService, TaskLocks locks)
     {
         _taskRepository = taskRepository;
         _authorizationService = authorizationService;
+        _locks = locks;
     }
 
     public async Task<TaskItem> Handle(AddTimeCommand request, CancellationToken cancellationToken)
@@ -23,6 +25,8 @@ public class AddTimeCommandHandler : IRequestHandler<AddTimeCommand, TaskItem>
         if (!_authorizationService.CanCreateTasksAsync(request.RequesterID))
             throw new DomainException("You do not have permission to add time to tasks");
         
+        using var _ = await _locks.AcquireAsync(request.TaskId);
+
         var task = await _taskRepository.GetByIdAsync(request.TaskId);
         
         if (task == null)

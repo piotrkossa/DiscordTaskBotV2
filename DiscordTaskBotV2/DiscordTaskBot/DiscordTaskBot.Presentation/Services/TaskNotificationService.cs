@@ -67,7 +67,7 @@ public class TaskNotificationService(
             ? "⚠️ **Task overdue!** The deadline has passed."
             : "🔔 **Reminder: the deadline is approaching!**";
 
-        return SendToUsersAsync(task.AssigneeIDs,
+        return SendToUsersAsync(task.PendingAssigneeIDs,
             $"{header}\n\n" +
             $"**{task.Description}**\n\n" +
             $"📅 Deadline: {DiscordUtility.GetDiscordTimestamp(task.TaskDuration.UtcDueDate, 'f')} " +
@@ -137,7 +137,7 @@ public class TaskNotificationService(
                 ? $"moved **{days} {Days(days)} later**"
                 : $"moved **{-days} {Days(days)} earlier**";
 
-            await SendToUsersAsync(task.AssigneeIDs,
+            await SendToUsersAsync(task.PendingAssigneeIDs,
                 "📅 **Deadline changed!**\n\n" +
                 $"**{task.Description}**\n\n" +
                 $"The deadline was {direction}.\n" +

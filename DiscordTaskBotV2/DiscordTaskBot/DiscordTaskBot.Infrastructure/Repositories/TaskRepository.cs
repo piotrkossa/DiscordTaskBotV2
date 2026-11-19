@@ -20,6 +20,9 @@ public class TaskRepository : ITaskRepository
 
         using var dbContext = _contextFactory.CreateDbContext();
         dbContext.Database.EnsureCreated();
+
+        // Adds columns introduced by newer versions to an existing database, keeping all data.
+        SchemaUpgrader.Upgrade(dbContext, message => Console.WriteLine($"[DATABASE] {message}"));
     }
 
     public async Task AddAsync(TaskItem taskItem)

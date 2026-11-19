@@ -18,6 +18,7 @@ public static class DependencyInjection
 
         services.AddSingleton<IAuthorizationService, AuthorizationService>();
         services.AddSingleton<ITaskRepository, TaskRepository>();
+        services.AddSingleton<TaskLocks>();
         return services;
     }
 }

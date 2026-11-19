@@ -40,6 +40,34 @@ public class OnReadyHandler(
             _client.CurrentUser.Discriminator);
 
         await RegisterSlashCommandsAsync();
+
+        CheckArchiveChannel();
+    }
+
+    // Channel permission overrides (e.g. a read-only archive channel) are the most common setup mistake,
+    // so report them at startup instead of on the first Archive click.
+    private void CheckArchiveChannel()
+    {
+        try
+        {
+            if (_client.GetChannel(_options.ArchiveChannelId) is not SocketGuildChannel channel)
+            {
+                _logger.LogError("Archive channel {ChannelId} was not found - check ArchiveChannelId and that the bot can see the channel",
+                    _options.ArchiveChannelId);
+                return;
+            }
+
+            var missing = DiscordUtility.GetMissingArchivePermissions(channel);
+            if (missing.Count > 0)
+                _logger.LogError("Bot is missing permissions in archive channel #{Channel}: {Missing}. Archiving tasks will fail until they are granted in the channel's permission settings.",
+                    channel.Name, string.Join(", ", missing));
+            else
+                _logger.LogInformation("Archive channel #{Channel}: permissions OK", channel.Name);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Could not check archive channel permissions");
+        }
     }
 
     private async Task RegisterSlashCommandsAsync()
